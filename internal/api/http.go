@@ -11,6 +11,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/rs/zerolog"
 
+	"github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
@@ -47,6 +48,7 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 func (api *HTTP) setupRoutes() {
 	router := mux.NewRouter()
 	router.Use(middlewareRequestID(), middlewareLogger(api.logger))
+	router.HandleFunc("/info", handleInfo)
 	v1 := router.PathPrefix("/api/v1").Subrouter()
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
 
@@ -140,6 +142,18 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	asJSON(ctx, w, &response, http.StatusOK)
+}
+
+func handleInfo(w http.ResponseWriter, r *http.Request) {
+	var response = struct {
+		Revision string
+		Branch   string
+	}{
+		Revision: flightcontrolcenter.Revision,
+		Branch:   flightcontrolcenter.Branch,
+	}
+
+	asJSON(r.Context(), w, &response, http.StatusOK)
 }
 
 func asJSON(ctx context.Context, w http.ResponseWriter, obj interface{}, code int) {
