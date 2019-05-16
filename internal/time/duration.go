@@ -30,3 +30,8 @@ func (d *Duration) UnmarshalJSON(data []byte) error {
 func (d *Duration) String() string {
 	return time.Duration(*d).String()
 }
+
+// Std returns std duration type
+func (d *Duration) Std() time.Duration {
+	return time.Duration(*d)
+}

@@ -1,8 +1,13 @@
-PROJECT_NAME=flightcontrolcenter
-PROJECT_PATH=github.com/ferux/$(PROJECT_NAME)
+GO=go
+
+PKG=$(shell $(GO) list | head -1 | sed -e 's/.*///')
+PKG_PATH=$(shell $(GO) list | head -1)
 
 BRANCH=$(shell git symbolic-ref --short HEAD)
 REVISION=$(shell git rev-parse --short HEAD)
+
+GOOS?=linux
+GOARCH?=amd64
 
 default: run
 
@@ -14,7 +19,7 @@ run: build
 .PHONY: build
 build: check
 	@echo ">"Building...
-	@go build -ldflags '-X $(PROJECT_PATH).Revision=$(REVISION) -X $(PROJECT_PATH).Branch=$(BRANCH)' -o ./bin/fcc ./internal/cmd/main.go
+	@go build -ldflags '-X $(PKG_PATH).Revision=$(REVISION) -X $(PKG_PATH).Branch=$(BRANCH)' -o ./bin/fcc ./internal/cmd/main.go
 
 .PHONY: check
 check:
