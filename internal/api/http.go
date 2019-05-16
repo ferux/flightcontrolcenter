@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -127,7 +128,12 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var first = yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24 * 7)}
+	var filterRoute = r.URL.Query().Get("route")
 	for _, tr := range transport.IncomingTransport {
+		if !strings.Contains(tr.Name, filterRoute) {
+			continue
+		}
+
 		if tr.Arrive.Before(first.Arrive) {
 			first = tr
 		}
