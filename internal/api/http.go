@@ -143,8 +143,8 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 }
 
 func asJSON(ctx context.Context, w http.ResponseWriter, obj interface{}, code int) {
-	w.WriteHeader(code)
 	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(code)
 
 	err := json.NewEncoder(w).Encode(obj)
 	if err != nil {
