@@ -1,0 +1,23 @@
+language: go
+
+go:
+  - 1.12.x
+
+addons:
+  ssh_known_hosts: git.loyso.art
+
+env:
+  - GO111MODULE=on
+
+before_install:
+  - go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+
+after_success:
+  - echo "$(SSH_PRIVATE_KEY)" | base64 --decode >/tmp/id_rsa
+  - eval "$(ssh-agent -s)"
+  - chmod 600 /tmp/id_rsa
+  - ssh-add /tmp/id_rsa
+  - rsync -r --delete-after --quiet bin/fcc root@loyso.art:/usr/local/bin/
+
+notificatins:
+  on_success: never

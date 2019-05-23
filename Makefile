@@ -9,7 +9,7 @@ REVISION=$(shell git rev-parse --short HEAD)
 GOOS?=linux
 GOARCH?=amd64
 
-default: run
+default: build
 
 .PHONY: run
 run: build
@@ -28,5 +28,5 @@ check:
 
 .PHONY: prepare
 prepare:
-	@echo ">"Installing linter
-	@go get -u -v github.com/golangci/golangci-lint/cmd/golangci-lint
+	@echo ">"Installing linter@v1.16.0
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
