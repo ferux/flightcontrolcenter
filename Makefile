@@ -24,7 +24,7 @@ build: check
 .PHONY: check
 check:
 	@echo ">"Inspecting code...
-	@golangci-lint run
+	@golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
 
 .PHONY: prepare
 prepare:

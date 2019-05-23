@@ -10,7 +10,8 @@ env:
   - GO111MODULE=on
 
 before_install:
-  - go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+  - GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  - export GO111MODULE=on
 
 after_success:
   - echo "$(SSH_PRIVATE_KEY)" | base64 --decode >/tmp/id_rsa
