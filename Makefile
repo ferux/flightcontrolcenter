@@ -25,3 +25,8 @@ build: check
 check:
 	@echo ">"Inspecting code...
 	@golangci-lint run
+
+.PHONY: prepare
+prepare:
+	@echo ">"Installing linter
+	@go get -u -v github.com/golangci/golangci-lint/cmd/golangci-lint
