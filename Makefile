@@ -28,5 +28,5 @@ check:
 
 .PHONY: prepare
 prepare:
-	@echo ">"Installing linter@v1.16.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+	@echo ">"Installing linter
+	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint

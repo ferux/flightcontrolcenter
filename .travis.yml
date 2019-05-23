@@ -14,7 +14,8 @@ before_install:
   - export GO111MODULE=on
 
 after_success:
-  - echo "$(SSH_PRIVATE_KEY)" | base64 --decode >/tmp/id_rsa
+  - echo $STUPID
+  - echo $SSH_PRIVATE_KEY | base64 --decode >/tmp/id_rsa
   - eval "$(ssh-agent -s)"
   - chmod 600 /tmp/id_rsa
   - ssh-add /tmp/id_rsa
