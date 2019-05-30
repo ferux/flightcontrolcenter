@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,10 +18,25 @@ import (
 )
 
 func main() {
+	path := flag.String("config", "./config.json", "path to config")
+	showRevision := flag.Bool("revision", false, "show version of the application")
+
+	flag.Parse()
+
+	if *showRevision {
+		fmt.Println(flightcontrolcenter.Revision)
+		return
+	}
+
 	logger := zerolog.New(os.Stdout)
-	cfg, err := config.Parse("./config.json")
+	cfg, err := config.Parse(*path)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("parsing config file")
+		logger.
+			Fatal().
+			Err(err).
+			Str("revision", flightcontrolcenter.Revision).
+			Str("branch", flightcontrolcenter.Branch).
+			Msg("parsing config file")
 	}
 
 	logger.Debug().Interface("config", cfg).Str("rev", flightcontrolcenter.Branch).Str("branch", flightcontrolcenter.Branch).Msg("starting application")
