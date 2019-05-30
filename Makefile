@@ -21,7 +21,7 @@ run: build
 	@./bin/fcc
 
 .PHONY: build
-build: check
+build:
 	@echo ">"Building...
 	@go build -ldflags '-X $(PKG_PATH).Revision=$(REVISION) -X $(PKG_PATH).Branch=$(BRANCH)' -o $(OUT) ./internal/cmd/main.go
 
@@ -36,7 +36,7 @@ build_linux: build
 build_remote: git_push_remote
 
 .PHONY: git_push_remote
-git_push_remote:
+git_push_remote: check
 	@git diff --quiet
 	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh $(REVISION)
 
