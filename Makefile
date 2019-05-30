@@ -38,7 +38,7 @@ build_remote: git_push_remote
 .PHONY: git_push_remote
 git_push_remote: check
 	@git diff --quiet
-	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh $(REVISION)
+	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh
 
 .PHONY: check
 check:
