@@ -33,10 +33,7 @@ build_linux: build
 	@echo ">"Built for linux!
 
 .PHONY: build_remote
-build_remote: git_push_remote
-
-.PHONY: git_push_remote
-git_push_remote: check
+build_remote: check
 	@git diff --quiet
 	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh
 
