@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/pborman/uuid"
 	"github.com/rs/zerolog"
@@ -25,10 +27,14 @@ type HTTP struct {
 
 	yaclient yandex.Client
 	logger   zerolog.Logger
+	notifier *raven.Client
+
+	requestCount int64
+	bootTime     time.Time
 }
 
 // NewHTTP prepares new http service
-func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logger) (*HTTP, error) {
+func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logger, nClient *raven.Client) (*HTTP, error) {
 	to := cfg.HTTP.Timeout.Std()
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Listen,
@@ -40,7 +46,13 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 		MaxHeaderBytes:    MaxHeaderBytes,
 	}
 
-	api := &HTTP{srv: srv, yaclient: yaclient, logger: logger}
+	api := &HTTP{
+		srv:      srv,
+		yaclient: yaclient,
+		logger:   logger,
+		bootTime: time.Now(),
+		notifier: nClient,
+	}
 	api.setupRoutes()
 
 	return api, nil
@@ -48,8 +60,8 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 
 func (api *HTTP) setupRoutes() {
 	router := mux.NewRouter()
-	router.Use(middlewareRequestID(), middlewareLogger(api.logger))
-	router.HandleFunc("/info", handleInfo)
+	router.Use(middlewareCounter(api), middlewareRequestID(), middlewareLogger(api.logger, api))
+	router.HandleFunc("/info", api.handleInfo)
 	v1 := router.PathPrefix("/api/v1").Subrouter()
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
 
@@ -89,7 +101,7 @@ func middlewareRequestID() func(http.Handler) http.Handler {
 	}
 }
 
-func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
+func middlewareLogger(logger zerolog.Logger, api *HTTP) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -105,6 +117,15 @@ func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
 			h.ServeHTTP(w, r)
 
 			lg.Info().Str("took", time.Since(start).String()).Msg("served")
+		})
+	}
+}
+
+func middlewareCounter(api *HTTP) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt64(&api.requestCount, 1)
+			h.ServeHTTP(w, r)
 		})
 	}
 }
@@ -150,13 +171,19 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	asJSON(ctx, w, &response, http.StatusOK)
 }
 
-func handleInfo(w http.ResponseWriter, r *http.Request) {
+func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {
 	var response = struct {
-		Revision string
-		Branch   string
+		Revision     string    `json:"revision"`
+		Branch       string    `json:"branch"`
+		Boot         time.Time `json:"boot"`
+		Uptime       string    `json:"uptime"`
+		RequestCount int64     `json:"request_count"`
 	}{
-		Revision: flightcontrolcenter.Revision,
-		Branch:   flightcontrolcenter.Branch,
+		Revision:     flightcontrolcenter.Revision,
+		Branch:       flightcontrolcenter.Branch,
+		Boot:         api.bootTime,
+		Uptime:       time.Since(api.bootTime).String(),
+		RequestCount: api.requestCount,
 	}
 
 	asJSON(r.Context(), w, &response, http.StatusOK)
