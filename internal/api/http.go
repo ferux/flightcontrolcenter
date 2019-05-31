@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -130,21 +131,51 @@ func middlewareCounter(api *HTTP) func(http.Handler) http.Handler {
 	}
 }
 
+type FailureResponse struct {
+	Message   string `json:"message,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
+}
+
+type SuccessResponse struct {
+	Name      string `json:"name,omitempty"`
+	Next      string `json:"next,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
+}
+
 func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	rid := fcontext.RequestID(ctx)
 	logger := zerolog.Ctx(ctx)
 
 	stopID := r.URL.Query().Get("stop_id")
 	if len(stopID) == 0 {
-		http.Error(w, "empty stop id", http.StatusBadRequest)
+		var response = FailureResponse{
+			Message:   "stop_id is empty",
+			RequestID: rid,
+		}
+		asJSON(ctx, w, &response, http.StatusUnprocessableEntity)
 		logger.Error().Msg("stop_id is empty")
+		rReq := raven.NewHttp(r)
+		api.notifier.CaptureError(errors.New("stop_id is empty"), nil, rReq)
 		return
 	}
 
 	transport, err := api.yaclient.Fetch(stopID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		var response = FailureResponse{
+			Message:   "something went wrong",
+			RequestID: fcontext.RequestID(ctx),
+		}
+		asJSON(ctx, w, &response, http.StatusInternalServerError)
 		logger.Error().Err(err).Msg("fetching stop id")
+		rReq := raven.NewHttp(r)
+		api.notifier.CaptureError(err, nil, rReq)
+		return
+	}
+
+	if len(transport.IncomingTransport) == 0 {
+		var response = FailureResponse{Message: "not found", RequestID: rid}
+		asJSON(ctx, w, &response, http.StatusNotFound)
 		return
 	}
 
@@ -160,10 +191,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var response = struct {
-		Name string
-		Next string
-	}{
+	var response = SuccessResponse{
 		Name: first.Name,
 		Next: first.Arrive.Format("15:04"),
 	}

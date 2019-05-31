@@ -9,8 +9,9 @@ import (
 
 // Application settings
 type Application struct {
-	Debug bool       `json:"debug,omitempty"`
-	HTTP  configHTTP `json:"http,omitempty"`
+	Debug     bool       `json:"debug,omitempty"`
+	HTTP      configHTTP `json:"http,omitempty"`
+	SentryDSN string     `json:"sentry_dsn,omitempty"`
 }
 
 type configHTTP struct {

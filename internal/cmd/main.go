@@ -49,7 +49,7 @@ func main() {
 	}
 
 	// TODO: hide sentry under interface implementation
-	notifierClient, err := raven.New("https://1deadc72a536463e9185ef0d2a309469:6747779b472840a6b2408611aa1972cf@sentry.io/1472205")
+	notifierClient, err := raven.New(cfg.SentryDSN)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("can't create sentry client")
 	}

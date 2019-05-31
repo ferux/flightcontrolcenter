@@ -30,6 +30,10 @@ func (c *client) Fetch(stopID string) (StopInfo, error) {
 		return StopInfo{}, err
 	}
 
+	if si.Data == nil {
+		return StopInfo{}, nil
+	}
+
 	var s = StopInfo{IncomingTransport: make([]TransportInfo, 0, len(si.Data.Properties.StopMetaData.Transport))}
 	var now = time.Now()
 	for _, tr := range si.Data.Properties.StopMetaData.Transport {
