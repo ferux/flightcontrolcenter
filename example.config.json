@@ -3,5 +3,6 @@
         "http": {
                 "listen": ":8080",
                 "timeout": "5m30s"
-        }
+        },
+        "sentry_dsn": ""
 }

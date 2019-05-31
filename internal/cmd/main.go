@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/raven-go"
 	"github.com/rs/zerolog"
 
 	"github.com/ferux/flightcontrolcenter"
@@ -36,6 +37,7 @@ func main() {
 			Err(err).
 			Str("revision", flightcontrolcenter.Revision).
 			Str("branch", flightcontrolcenter.Branch).
+			Str("env", flightcontrolcenter.Env).
 			Msg("parsing config file")
 	}
 
@@ -46,7 +48,15 @@ func main() {
 		logger.Fatal().Err(err).Msg("can't create yandex client: ")
 	}
 
-	api, _ := api.NewHTTP(cfg, client, logger)
+	// TODO: hide sentry under interface implementation
+	notifierClient, err := raven.New(cfg.SentryDSN)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("can't create sentry client")
+	}
+	notifierClient.SetRelease(flightcontrolcenter.Revision)
+	notifierClient.SetEnvironment(flightcontrolcenter.Env)
+
+	api, _ := api.NewHTTP(cfg, client, logger, notifierClient)
 	api.Serve()
 
 	s := make(chan os.Signal, 1)

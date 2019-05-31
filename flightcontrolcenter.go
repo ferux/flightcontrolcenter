@@ -6,4 +6,7 @@ var (
 
 	// Branch stores current branch
 	Branch string
+
+	// Env stores current environment
+	Env string = "production"
 )

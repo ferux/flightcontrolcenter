@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/pborman/uuid"
 	"github.com/rs/zerolog"
@@ -25,10 +28,14 @@ type HTTP struct {
 
 	yaclient yandex.Client
 	logger   zerolog.Logger
+	notifier *raven.Client
+
+	requestCount int64
+	bootTime     time.Time
 }
 
 // NewHTTP prepares new http service
-func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logger) (*HTTP, error) {
+func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logger, nClient *raven.Client) (*HTTP, error) {
 	to := cfg.HTTP.Timeout.Std()
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Listen,
@@ -40,7 +47,13 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 		MaxHeaderBytes:    MaxHeaderBytes,
 	}
 
-	api := &HTTP{srv: srv, yaclient: yaclient, logger: logger}
+	api := &HTTP{
+		srv:      srv,
+		yaclient: yaclient,
+		logger:   logger,
+		bootTime: time.Now(),
+		notifier: nClient,
+	}
 	api.setupRoutes()
 
 	return api, nil
@@ -48,8 +61,8 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 
 func (api *HTTP) setupRoutes() {
 	router := mux.NewRouter()
-	router.Use(middlewareRequestID(), middlewareLogger(api.logger))
-	router.HandleFunc("/info", handleInfo)
+	router.Use(middlewareCounter(api), middlewareRequestID(), middlewareLogger(api.logger, api))
+	router.HandleFunc("/info", api.handleInfo)
 	v1 := router.PathPrefix("/api/v1").Subrouter()
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
 
@@ -89,7 +102,7 @@ func middlewareRequestID() func(http.Handler) http.Handler {
 	}
 }
 
-func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
+func middlewareLogger(logger zerolog.Logger, api *HTTP) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -109,21 +122,60 @@ func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
+func middlewareCounter(api *HTTP) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt64(&api.requestCount, 1)
+			h.ServeHTTP(w, r)
+		})
+	}
+}
+
+type FailureResponse struct {
+	Message   string `json:"message,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
+}
+
+type SuccessResponse struct {
+	Name      string `json:"name,omitempty"`
+	Next      string `json:"next,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
+}
+
 func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	rid := fcontext.RequestID(ctx)
 	logger := zerolog.Ctx(ctx)
 
 	stopID := r.URL.Query().Get("stop_id")
 	if len(stopID) == 0 {
-		http.Error(w, "empty stop id", http.StatusBadRequest)
+		var response = FailureResponse{
+			Message:   "stop_id is empty",
+			RequestID: rid,
+		}
+		asJSON(ctx, w, &response, http.StatusUnprocessableEntity)
 		logger.Error().Msg("stop_id is empty")
+		rReq := raven.NewHttp(r)
+		api.notifier.CaptureError(errors.New("stop_id is empty"), nil, rReq)
 		return
 	}
 
 	transport, err := api.yaclient.Fetch(stopID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		var response = FailureResponse{
+			Message:   "something went wrong",
+			RequestID: fcontext.RequestID(ctx),
+		}
+		asJSON(ctx, w, &response, http.StatusInternalServerError)
 		logger.Error().Err(err).Msg("fetching stop id")
+		rReq := raven.NewHttp(r)
+		api.notifier.CaptureError(err, nil, rReq)
+		return
+	}
+
+	if len(transport.IncomingTransport) == 0 {
+		var response = FailureResponse{Message: "not found", RequestID: rid}
+		asJSON(ctx, w, &response, http.StatusNotFound)
 		return
 	}
 
@@ -139,10 +191,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var response = struct {
-		Name string
-		Next string
-	}{
+	var response = SuccessResponse{
 		Name: first.Name,
 		Next: first.Arrive.Format("15:04"),
 	}
@@ -150,13 +199,19 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	asJSON(ctx, w, &response, http.StatusOK)
 }
 
-func handleInfo(w http.ResponseWriter, r *http.Request) {
+func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {
 	var response = struct {
-		Revision string
-		Branch   string
+		Revision     string    `json:"revision"`
+		Branch       string    `json:"branch"`
+		Boot         time.Time `json:"boot"`
+		Uptime       string    `json:"uptime"`
+		RequestCount int64     `json:"request_count"`
 	}{
-		Revision: flightcontrolcenter.Revision,
-		Branch:   flightcontrolcenter.Branch,
+		Revision:     flightcontrolcenter.Revision,
+		Branch:       flightcontrolcenter.Branch,
+		Boot:         api.bootTime,
+		Uptime:       time.Since(api.bootTime).String(),
+		RequestCount: api.requestCount,
 	}
 
 	asJSON(r.Context(), w, &response, http.StatusOK)
