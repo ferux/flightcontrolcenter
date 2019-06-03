@@ -15,12 +15,12 @@ before_install:
   # - export GO111MODULE=on
   - echo -e $SSH_PRIVATE_KEY | base64 --decode > ./deploy_key
   - eval "$(ssh-agent -s)"
-  - chmod 600 ./deploy_key
+  - chmod 600 /tmp/ssh/deploy_key
 
 after_success:
   # - sshpass -p $SSH_PASS ssh-add /tmp/id_rsa
   # - rsync -r --delete-after --quiet bin/fcc root@loyso.art:/usr/local/bin/
-  ssh -i ./deploy_key root@loyso.art pwd
+  ssh -i /tmp/ssh/deploy_key root@loyso.art pwd
 
 notificatins:
   on_success: never
