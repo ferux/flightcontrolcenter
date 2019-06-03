@@ -49,5 +49,9 @@ prepare:
 
 .PHONY: deploy
 deploy: build_linux
-	scp bin/fcc_linux $(SSH_USER)@$(SSH_HOST):/opt/fcc/fcc
-	ssh $(SSH_USER)@$(SSH_HOST) systemctl restart fcc
+	@echo ">"Stoping service
+	@ssh $(SSH_USER)@$(SSH_HOST) systemctl stop fcc
+	@echo ">"Copying binary file
+	@scp bin/fcc_linux $(SSH_USER)@$(SSH_HOST):/opt/fcc/fcc
+	@echo ">"Starting service
+	@ssh $(SSH_USER)@$(SSH_HOST) systemctl start fcc

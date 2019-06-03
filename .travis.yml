@@ -4,24 +4,22 @@ go:
   - 1.12.x
 
 addons:
-  ssh_known_hosts: loyso.art
+  ssh_known_hosts: $(SSH_HOST)
 
 env:
   - GO111MODULE=on
 
 before_install:
-  # - sudo apt-get install -qq sshpass
-  # - GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-  # - export GO111MODULE=on
   - mkdir /tmp/ssh
   - echo -e $SSH_PRIVATE_KEY | base64 --decode > /tmp/ssh/deploy_key
   - eval "$(ssh-agent -s)"
   - chmod 600 /tmp/ssh/deploy_key
+  - ssh-add /tmp/ssh/deploy_key
+  - make prepare
+  - make check
 
-after_success:
-  # - sshpass -p $SSH_PASS ssh-add /tmp/id_rsa
-  # - rsync -r --delete-after --quiet bin/fcc root@loyso.art:/usr/local/bin/
-  ssh -i /tmp/ssh/deploy_key root@loyso.art pwd
+install:
+  - make deploy
 
-notificatins:
+notifications:
   on_success: never
