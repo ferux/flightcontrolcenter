@@ -10,17 +10,17 @@ env:
   - GO111MODULE=on
 
 before_install:
-  - sudo apt-get install -qq sshpass
-  - GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-  - export GO111MODULE=on
+  # - sudo apt-get install -qq sshpass
+  # - GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  # - export GO111MODULE=on
+  - echo -e $SSH_PRIVATE_KEY | base64 --decode > ./deploy_key
+  - eval "$(ssh-agent -s)"
+  - chmod 600 ./deploy_key
 
 after_success:
-  - echo $STUPID
-  - echo -e $SSH_PRIVATE_KEY | base64 --decode > /tmp/id_rsa
-  - eval "$(ssh-agent -s)"
-  - chmod 600 /tmp/id_rsa
-  - sshpass -p $SSH_PASS ssh-add /tmp/id_rsa
-  - rsync -r --delete-after --quiet bin/fcc root@loyso.art:/usr/local/bin/
+  # - sshpass -p $SSH_PASS ssh-add /tmp/id_rsa
+  # - rsync -r --delete-after --quiet bin/fcc root@loyso.art:/usr/local/bin/
+  ssh -i ./deploy_key root@loyso.art pwd
 
 notificatins:
   on_success: never
