@@ -13,7 +13,8 @@ before_install:
   # - sudo apt-get install -qq sshpass
   # - GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
   # - export GO111MODULE=on
-  - echo -e $SSH_PRIVATE_KEY | base64 --decode > ./deploy_key
+  - mkdir /tmp/ssh
+  - echo -e $SSH_PRIVATE_KEY | base64 --decode > /tmp/ssh/deploy_key
   - eval "$(ssh-agent -s)"
   - chmod 600 /tmp/ssh/deploy_key
 
