@@ -6,6 +6,10 @@ go:
 addons:
   ssh_known_hosts: loyso.art
 
+branches:
+  only:
+  - master
+
 env:
   - GO111MODULE=on
 

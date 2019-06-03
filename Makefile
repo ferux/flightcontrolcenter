@@ -3,8 +3,8 @@ GO=go
 PKG=$(shell $(GO) list | head -1 | sed -e 's/.*///')
 PKG_PATH=$(shell $(GO) list | head -1)
 
-BRANCH=$(shell git symbolic-ref --short HEAD)
-REVISION=$(shell git rev-parse --short HEAD)
+BRANCH?=$(shell git symbolic-ref --short HEAD)
+REVISION?=$(shell git rev-parse --short HEAD)
 OUT?=bin/fcc
 
 GOOS?=linux
