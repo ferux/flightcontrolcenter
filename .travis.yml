@@ -4,7 +4,7 @@ go:
   - 1.12.x
 
 addons:
-  ssh_known_hosts: $(SSH_HOST)
+  ssh_known_hosts: loyso.art
 
 env:
   - GO111MODULE=on
