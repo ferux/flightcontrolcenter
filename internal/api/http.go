@@ -186,6 +186,11 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		// let's think the next bus time can't be after 23 hours.
+		if tr.Arrive.Hour() < time.Now().Hour() {
+			tr.Arrive = tr.Arrive.Add(time.Hour * 24)
+		}
+
 		if tr.Arrive.Before(first.Arrive) {
 			first = tr
 		}
