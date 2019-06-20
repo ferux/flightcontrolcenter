@@ -21,9 +21,14 @@ run: build
 	@./bin/fcc
 
 .PHONY: build
-build:
+build: build_static
 	@echo ">"Building...
 	@go build -ldflags '-X $(PKG_PATH).Revision=$(REVISION) -X $(PKG_PATH).Branch=$(BRANCH)' -o $(OUT) ./internal/cmd/main.go
+
+.PHONY: build_static
+build_static: install_bindata
+	@echo ">"Embedding static files...
+	@bin/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -55,3 +60,8 @@ deploy: build_linux
 	@scp bin/fcc_linux $(SSH_USER)@$(SSH_HOST):/opt/fcc/fcc
 	@echo ">"Starting service
 	@ssh $(SSH_USER)@$(SSH_HOST) systemctl start fcc
+
+.PHONY: install_bindata
+install_bindata:
+	@echo ">"Updating go-bindata
+	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2

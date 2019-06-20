@@ -1,0 +1,113 @@
+openapi: 3.0.1
+info:
+  title: Flight Control Center
+  description: Service for personal needs
+  version: 0.0.5
+  termsOfService: 'https://loyso.art/terms'
+  contact:
+    email: atrushkin@outlook.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: '/api/v1'
+tags:
+  - name: bus
+    description: Retrieves information about bus stops
+  - name: service
+    description: Service information handlers
+paths:
+  /info:
+    get:
+      tags:
+        - service
+      summary: Get service info
+      operationId: handleInfo
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+        '500':
+          description: Failure
+  /nextbus:
+    get:
+      tags:
+        - bus
+      summary: Information about arriving bus
+      operationId: handleNextBus
+      parameters:
+        - name: stop_id
+          description: ID of the stop in yandex.maps
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: route
+          description: Filter parameter for including route name
+          in: query
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopInfo'
+        '404':
+          description: Stop ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Failure
+components:
+  schemas:
+    ServiceInfo:
+      type: object
+      properties:
+        revision:
+          type: string
+          description: Application Revision
+        branch:
+          type: string
+          description: Branch thas has been used to build app
+        boot:
+          type: string
+          format: date-time
+          description: Then the service has been started
+        uptime:
+          type: string
+          description: Uptime
+        request_count:
+          type: integer
+          format: int64
+          description: 'Amount of requests, served since boot'
+    StopInfo:
+      description: Time of next bus and route name
+      type: object
+      properties:
+        name:
+          type: string
+        next:
+          type: string
+          format: time
+        request_id:
+          type: string
+    ServiceError:
+      description: Common error
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message about an error
+        request_id:
+          type: string
+          description: Request ID
