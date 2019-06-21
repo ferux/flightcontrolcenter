@@ -82,21 +82,24 @@ paths:
       operationId: handleSendMessage
       parameters:
         - name: api
+          description: api key
           in: query
           required: true
           allowEmptyValue: false
           schema:
             type: string
         - name: chat_id
+          description: user id or chat id
           in: query
           required: true
           allowEmptyValue: false
           schema:
             type: string
         - name: text
+          description: message to send
           in: query
           required: true
-          allowEmptyValie: false
+          allowEmptyValue: false
           schema:
             type: string
       responses:
