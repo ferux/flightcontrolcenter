@@ -22,6 +22,7 @@ before_install:
   - make prepare
   - make check
   - make test
+  - make install_bindata
 
 install:
   - make deploy
