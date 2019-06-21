@@ -1,4 +1,5 @@
 openapi: 3.0.1
+
 info:
   title: Flight Control Center
   description: Service for personal needs
@@ -9,13 +10,16 @@ info:
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
 servers:
   - url: '/api/v1'
+
 tags:
   - name: bus
     description: Retrieves information about bus stops
   - name: service
     description: Service information handlers
+
 paths:
   /info:
     get:
@@ -32,6 +36,7 @@ paths:
                 $ref: '#/components/schemas/ServiceInfo'
         '500':
           description: Failure
+
   /nextbus:
     get:
       tags:
@@ -68,8 +73,47 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
         '500':
           description: Failure
+
+  /send_message:
+    get:
+      tags:
+      - telegram
+      summary: Send message to telegram
+      operationId: handleSendMessage
+      parameters:
+        - name: api
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: chat_id
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: text
+          in: query
+          required: true
+          allowEmptyValie: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Query problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Failure
+
 components:
   schemas:
+
     ServiceInfo:
       type: object
       properties:
@@ -90,6 +134,7 @@ components:
           type: integer
           format: int64
           description: 'Amount of requests, served since boot'
+
     StopInfo:
       description: Time of next bus and route name
       type: object
@@ -101,6 +146,7 @@ components:
           format: time
         request_id:
           type: string
+
     ServiceError:
       description: Common error
       type: object
