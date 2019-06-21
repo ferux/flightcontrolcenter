@@ -65,3 +65,7 @@ deploy: build_linux
 install_bindata:
 	@echo ">"Updating go-bindata
 	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
+
+.PHONY: test
+test:
+	go test -race -timeout 60s ./internal/...

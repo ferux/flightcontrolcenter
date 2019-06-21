@@ -20,6 +20,6 @@ func (api *HTTP) setupRoutes() {
 	v1.Use(middlewareCounter(api), middlewareRequestID(), middlewareLogger(api.logger, api))
 	v1.HandleFunc("/info", api.handleInfo)
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
-
+	v1.HandleFunc("/send_message", api.handleSendMessage).Methods(http.MethodGet)
 	api.srv.Handler = router
 }
