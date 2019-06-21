@@ -21,6 +21,7 @@ before_install:
   - ssh-add /tmp/ssh/deploy_key
   - make prepare
   - make check
+  - make test
 
 install:
   - make deploy
