@@ -58,17 +58,31 @@ func main() {
 	notifierClient.SetEnvironment(flightcontrolcenter.Env)
 
 	tgclient := telegram.New()
-
 	api, _ := api.NewHTTP(cfg, yaclient, tgclient, logger, notifierClient)
 	api.Serve()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	go func() {
+		if err := sendNotificationMessage(ctx, tgclient, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID); err != nil {
+			logger.Error().Err(err).Msg("can't notify telegram")
+		}
+	}()
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGQUIT)
 	<-s
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
 	if errShut := api.Shutdown(ctx); errShut != nil {
 		logger.Error().Err(errShut).Msg("error shuting down server: ")
 	}
+}
+
+func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api, chatID string) error {
+	var b = flightcontrolcenter.Branch
+	var e = flightcontrolcenter.Env
+	var r = flightcontrolcenter.Revision
+	message := fmt.Sprintf("fcc branch=%s env=%s revision=%s", b, e, r)
+	return tgclient.SendMessageViaHTTP(context.Background(), api, chatID, message)
 }
