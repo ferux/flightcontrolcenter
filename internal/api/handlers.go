@@ -1,16 +1,14 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
+	"context"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
+	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
 	"github.com/getsentry/raven-go"
@@ -20,37 +18,39 @@ import (
 func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := fcontext.RequestID(ctx)
-	logger := zerolog.Ctx(ctx)
 
 	stopID := r.URL.Query().Get("stop_id")
 	if len(stopID) == 0 {
-		var response = ServiceError{
+		var response = model.ServiceError{
 			Message:   "stop_id is empty",
 			RequestID: rid,
+			Code:      http.StatusUnprocessableEntity,
 		}
-		asJSON(ctx, w, &response, http.StatusUnprocessableEntity)
-		logger.Error().Msg("stop_id is empty")
-		rReq := raven.NewHttp(r)
-		api.notifier.CaptureError(errors.New("stop_id is empty"), nil, rReq)
+
+		api.serveError(ctx, w, r, response)
 		return
 	}
 
 	transport, err := api.yaclient.Fetch(stopID)
 	if err != nil {
-		var response = ServiceError{
+		var response = model.ServiceError{
 			Message:   "something went wrong",
 			RequestID: fcontext.RequestID(ctx),
+			Code:      http.StatusInternalServerError,
 		}
-		asJSON(ctx, w, &response, http.StatusInternalServerError)
-		logger.Error().Err(err).Msg("fetching stop id")
-		rReq := raven.NewHttp(r)
-		api.notifier.CaptureError(err, nil, rReq)
+
+		api.serveError(ctx, w, r, response)
 		return
 	}
 
 	if len(transport.IncomingTransport) == 0 {
-		var response = ServiceError{Message: "not found", RequestID: rid}
-		asJSON(ctx, w, &response, http.StatusNotFound)
+		var response = model.ServiceError{
+			Message:   "not found",
+			RequestID: rid,
+			Code:      http.StatusNotFound,
+		}
+
+		api.serveError(ctx, w, r, response)
 		return
 	}
 
@@ -99,86 +99,42 @@ func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {
 	asJSON(r.Context(), w, &response, http.StatusOK)
 }
 
-type SendMessageResponse struct {
-	MessageID int64 `json:"message_id"`
-}
-
 func (api *HTTP) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	var ctx = r.Context()
-	var rid = fcontext.RequestID(ctx)
-	var logger = zerolog.Ctx(ctx)
-
 	var apiKey = r.URL.Query().Get("api")
 	var chatID = r.URL.Query().Get("chat_id")
 	var text = r.URL.Query().Get("text")
 
-	if len(apiKey) == 0 {
-		var response = ServiceError{Message: "api is empty", RequestID: rid}
-		asJSON(ctx, w, response, http.StatusBadRequest)
-		return
-	}
-
-	if len(chatID) == 0 {
-		var response = ServiceError{Message: "chat_id is empty", RequestID: rid}
-		asJSON(ctx, w, response, http.StatusBadRequest)
-		return
-	}
-
-	if len(text) == 0 {
-		var response = ServiceError{Message: "text is empty", RequestID: rid}
-		asJSON(ctx, w, response, http.StatusBadRequest)
-		return
-	}
-
-	logger.Debug().Str("api_key", apiKey).Str("chat_id", chatID).Str("text", text).Msg("resending to telegram")
-
-	client := http.DefaultClient
-	client.Timeout = time.Second * 10
-
-	var requestURL = fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", apiKey)
-	request, _ := http.NewRequest(http.MethodGet, requestURL, nil)
-
-	values := request.URL.Query()
-	values.Set("chat_id", chatID)
-	values.Set("text", text)
-
-	request.URL.RawQuery = values.Encode()
-
-	response, err := client.Do(request)
+	err := api.tgclient.SendMessageViaHTTP(ctx, apiKey, chatID, text)
 	if err != nil {
-		logger.Error().Err(err).Msg("unable to proceed request")
-		ravenRequest := raven.NewHttp(r)
-		api.notifier.CaptureError(err, map[string]string{"fn": "handleNextMessage"}, ravenRequest)
-
-		responseError := ServiceError{Message: err.Error(), RequestID: rid}
-		asJSON(ctx, w, responseError, http.StatusInternalServerError)
+		api.serveError(ctx, w, r, err)
 		return
 	}
-
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		logger.Error().Err(err).Msg("unable to read body")
-		api.notifier.CaptureError(err, nil)
-
-		responseError := ServiceError{Message: err.Error(), RequestID: rid}
-		asJSON(ctx, w, responseError, http.StatusInternalServerError)
-		return
-	}
-
-	// I don't care about error here
-	_ = response.Body.Close()
-
-	var telegramResponse SendMessageResponse
-	if err := json.Unmarshal(responseData, &telegramResponse); err != nil {
-		logger.Error().Err(err).Msg("unable to unmarshal response")
-		api.notifier.CaptureError(err, nil)
-
-		responseError := ServiceError{Message: err.Error(), RequestID: rid}
-		asJSON(ctx, w, responseError, http.StatusInternalServerError)
-		return
-	}
-
-	logger.Info().Int64("message_id", telegramResponse.MessageID).Msg("telegram message served")
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+	var logger = zerolog.Ctx(ctx)
+	var rid = fcontext.RequestID(ctx)
+
+	var responseError model.ServiceError
+	switch terr := err.(type) {
+	case model.ServiceError:
+		responseError = terr
+		if terr.Code == 0 {
+			responseError.Code = http.StatusInternalServerError
+		}
+	default:
+		responseError.Code = http.StatusInternalServerError
+		responseError.Message = err.Error()
+		responseError.RequestID = rid
+	}
+
+	logger.Error().Err(responseError).Msg("captured error")
+
+	ravenRequest := raven.NewHttp(r)
+	api.notifier.CaptureError(err, nil, ravenRequest)
+
+	asJSON(ctx, w, responseError, responseError.Code)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/api"
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 )
 
@@ -43,9 +44,9 @@ func main() {
 
 	logger.Debug().Interface("config", cfg).Str("rev", flightcontrolcenter.Branch).Str("branch", flightcontrolcenter.Branch).Msg("starting application")
 
-	client, err := yandex.New(nil)
+	yaclient, err := yandex.New(nil)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("can't create yandex client: ")
+		logger.Fatal().Err(err).Msg("can't create yandex client")
 	}
 
 	// TODO: hide sentry under interface implementation
@@ -56,7 +57,9 @@ func main() {
 	notifierClient.SetRelease(flightcontrolcenter.Revision)
 	notifierClient.SetEnvironment(flightcontrolcenter.Env)
 
-	api, _ := api.NewHTTP(cfg, client, logger, notifierClient)
+	tgclient := telegram.New()
+
+	api, _ := api.NewHTTP(cfg, yaclient, tgclient, logger, notifierClient)
 	api.Serve()
 
 	s := make(chan os.Signal, 1)

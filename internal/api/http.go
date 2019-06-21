@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
 	"github.com/getsentry/raven-go"
@@ -20,6 +21,7 @@ type HTTP struct {
 	srv *http.Server
 
 	yaclient yandex.Client
+	tgclient telegram.Client
 	logger   zerolog.Logger
 	notifier *raven.Client
 
@@ -28,7 +30,7 @@ type HTTP struct {
 }
 
 // NewHTTP prepares new http service
-func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logger, nClient *raven.Client) (*HTTP, error) {
+func NewHTTP(cfg config.Application, yaclient yandex.Client, tgclient telegram.Client, logger zerolog.Logger, nClient *raven.Client) (*HTTP, error) {
 	to := cfg.HTTP.Timeout.Std()
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Listen,
@@ -43,6 +45,7 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, logger zerolog.Logg
 	api := &HTTP{
 		srv:      srv,
 		yaclient: yaclient,
+		tgclient: tgclient,
 		logger:   logger,
 		bootTime: time.Now(),
 		notifier: nClient,
