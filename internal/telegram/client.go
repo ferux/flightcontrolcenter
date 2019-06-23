@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/valyala/fastjson"
 
 	"github.com/rs/zerolog"
 )
@@ -17,10 +17,6 @@ import (
 // Client for interacting with telegram
 type Client interface {
 	SendMessageViaHTTP(ctx context.Context, apiKey, chatID, text string) error
-}
-
-type SendMessageResponse struct {
-	MessageID int64 `json:"message_id"`
 }
 
 type client struct {
@@ -77,14 +73,14 @@ func (client *client) SendMessageViaHTTP(ctx context.Context, apiKey, chatID, te
 	// I don't care about error here
 	_ = response.Body.Close()
 
-	var telegramResponse SendMessageResponse
-	if err := json.Unmarshal(responseData, &telegramResponse); err != nil {
-		logger.Error().Err(err).Msg("unable to unmarshal response")
+	v, err := fastjson.ParseBytes(responseData)
+	if err != nil {
+		logger.Error().Err(err).Msg("unable to parse response")
 
 		return model.ServiceError{Message: err.Error(), RequestID: rid, Code: http.StatusInternalServerError}
 	}
 
-	logger.Info().Int64("message_id", telegramResponse.MessageID).Msg("telegram message served")
+	logger.Info().Int64("message_id", int64(v.GetInt("message_id"))).Msg("response from telegram")
 
 	return nil
 }

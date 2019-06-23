@@ -1,0 +1,22 @@
+{% code
+type MarshalData struct {
+        Revision string `json:"revision"`
+        Branch string `json:"branch"`
+        BootTime string `json:"boot"`
+        Uptime float64 `json:"uptime"`
+        RequestCount int `json:"request_count"`
+}
+%}
+
+// JSON marshaling
+{% stripspace %}
+{% func (d *MarshalData) JSON() %}
+{
+        "revision": {%q= d.Revision %},
+        "branch": {%q= d.Branch %},
+        "boot": {%q= d.BootTime %},
+        "uptime": {%f.0= d.Uptime %},
+        "request_count": {%d= d.RequestCount %}
+}
+{% endstripspace %}
+{% endfunc %}

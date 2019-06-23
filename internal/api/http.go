@@ -78,7 +78,6 @@ func asJSON(ctx context.Context, w http.ResponseWriter, obj interface{}, code in
 
 	err := json.NewEncoder(w).Encode(obj)
 	if err != nil {
-		logger := zerolog.Ctx(ctx)
-		logger.Error().Err(err).Msg("encoding json")
+		zerolog.Ctx(ctx).Error().Err(err).Msg("encoding json")
 	}
 }

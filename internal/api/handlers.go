@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter"
+	fcc "github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/ferux/flightcontrolcenter/internal/templates"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
 	"github.com/getsentry/raven-go"
@@ -79,24 +80,17 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	asJSON(ctx, w, &response, http.StatusOK)
 }
 
-type ServiceInfo struct {
-	Revision     string    `json:"revision"`
-	Branch       string    `json:"branch"`
-	Boot         time.Time `json:"boot"`
-	Uptime       string    `json:"uptime"`
-	RequestCount int64     `json:"request_count"`
-}
-
 func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {
-	var response = ServiceInfo{
-		Revision:     flightcontrolcenter.Revision,
-		Branch:       flightcontrolcenter.Branch,
-		Boot:         api.bootTime,
-		Uptime:       time.Since(api.bootTime).String(),
-		RequestCount: api.requestCount,
-	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
-	asJSON(r.Context(), w, &response, http.StatusOK)
+	(&templates.MarshalData{
+		Revision:     fcc.Revision,
+		Branch:       fcc.Branch,
+		BootTime:     api.bootTime.String(),
+		Uptime:       time.Since(api.bootTime).Seconds(),
+		RequestCount: int(api.requestCount),
+	}).WriteJSON(w)
 }
 
 func (api *HTTP) handleSendMessage(w http.ResponseWriter, r *http.Request) {
