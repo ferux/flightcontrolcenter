@@ -72,12 +72,13 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var response = StopInfo{
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	(&templates.NextBus{
 		Name: first.Name,
 		Next: first.Arrive.Format("15:04"),
-	}
-
-	asJSON(ctx, w, &response, http.StatusOK)
+	}).WriteJSON(w)
 }
 
 func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {

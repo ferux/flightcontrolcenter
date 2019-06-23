@@ -83,3 +83,53 @@ func (d *MarshalData) JSON() string {
 	return qs422016
 //line internal/templates/get_info_response.qtpl:22
 }
+
+//line internal/templates/get_info_response.qtpl:25
+type NextBus struct {
+	Next string `json:"next"`
+	Name string `json:"name"`
+}
+
+//line internal/templates/get_info_response.qtpl:33
+func (d *NextBus) StreamJSON(qw422016 *qt422016.Writer) {
+//line internal/templates/get_info_response.qtpl:33
+	qw422016.N().S(`{"next":`)
+//line internal/templates/get_info_response.qtpl:35
+	qw422016.N().Q(d.Next)
+//line internal/templates/get_info_response.qtpl:35
+	qw422016.N().S(`,"name":`)
+//line internal/templates/get_info_response.qtpl:36
+	qw422016.N().Q(d.Name)
+//line internal/templates/get_info_response.qtpl:36
+	qw422016.N().S(`}`)
+//line internal/templates/get_info_response.qtpl:38
+	qw422016.N().S(`
+`)
+//line internal/templates/get_info_response.qtpl:39
+}
+
+//line internal/templates/get_info_response.qtpl:39
+func (d *NextBus) WriteJSON(qq422016 qtio422016.Writer) {
+//line internal/templates/get_info_response.qtpl:39
+	qw422016 := qt422016.AcquireWriter(qq422016)
+//line internal/templates/get_info_response.qtpl:39
+	d.StreamJSON(qw422016)
+//line internal/templates/get_info_response.qtpl:39
+	qt422016.ReleaseWriter(qw422016)
+//line internal/templates/get_info_response.qtpl:39
+}
+
+//line internal/templates/get_info_response.qtpl:39
+func (d *NextBus) JSON() string {
+//line internal/templates/get_info_response.qtpl:39
+	qb422016 := qt422016.AcquireByteBuffer()
+//line internal/templates/get_info_response.qtpl:39
+	d.WriteJSON(qb422016)
+//line internal/templates/get_info_response.qtpl:39
+	qs422016 := string(qb422016.B)
+//line internal/templates/get_info_response.qtpl:39
+	qt422016.ReleaseByteBuffer(qb422016)
+//line internal/templates/get_info_response.qtpl:39
+	return qs422016
+//line internal/templates/get_info_response.qtpl:39
+}

@@ -20,3 +20,20 @@ type MarshalData struct {
 }
 {% endstripspace %}
 {% endfunc %}
+
+{% code 
+type NextBus struct{
+        Next string `json:"next"`
+        Name string `json:"name"`
+}
+%}
+
+
+{% stripspace %}
+{% func (d *NextBus) JSON() %}
+{
+        "next": {%q= d.Next %},
+        "name": {%q= d.Name %}
+}
+{% endstripspace %}
+{% endfunc %}

@@ -41,9 +41,9 @@ func TestGetInfo(t *testing.T) {
 
 	api.handleInfo(w, r)
 	exp := templates.MarshalData{
-		Revision:     fcc.Revision,
-		Branch:       fcc.Branch,
-		BootTime:     now.String(),
+		Revision: fcc.Revision,
+		Branch:   fcc.Branch,
+		BootTime: now.String(),
 		// because when marshaling we cut everything after the point
 		Uptime:       float64(int(time.Since(now).Seconds())),
 		RequestCount: int(api.requestCount),

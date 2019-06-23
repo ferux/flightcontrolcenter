@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -30,7 +29,13 @@ type HTTP struct {
 }
 
 // NewHTTP prepares new http service
-func NewHTTP(cfg config.Application, yaclient yandex.Client, tgclient telegram.Client, logger zerolog.Logger, nClient *raven.Client) (*HTTP, error) {
+func NewHTTP(
+	cfg config.Application,
+	yaclient yandex.Client,
+	tgclient telegram.Client,
+	logger zerolog.Logger,
+	nClient *raven.Client,
+) (*HTTP, error) {
 	to := cfg.HTTP.Timeout.Std()
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Listen,
@@ -38,7 +43,6 @@ func NewHTTP(cfg config.Application, yaclient yandex.Client, tgclient telegram.C
 		ReadHeaderTimeout: to,
 		WriteTimeout:      to,
 		IdleTimeout:       to,
-		TLSConfig:         &tls.Config{InsecureSkipVerify: true},
 		MaxHeaderBytes:    MaxHeaderBytes,
 	}
 

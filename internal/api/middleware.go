@@ -28,7 +28,7 @@ func middlewareRequestID() func(http.Handler) http.Handler {
 	}
 }
 
-func middlewareLogger(logger zerolog.Logger, api *HTTP) func(http.Handler) http.Handler {
+func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()

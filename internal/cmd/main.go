@@ -42,7 +42,12 @@ func main() {
 			Msg("parsing config file")
 	}
 
-	logger.Debug().Interface("config", cfg).Str("rev", flightcontrolcenter.Branch).Str("branch", flightcontrolcenter.Branch).Msg("starting application")
+	logger.
+		Debug().
+		Interface("config", cfg).
+		Str("rev", flightcontrolcenter.Branch).
+		Str("branch", flightcontrolcenter.Branch).
+		Msg("starting application")
 
 	yaclient, err := yandex.New(nil)
 	if err != nil {
@@ -74,8 +79,13 @@ func main() {
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGQUIT)
 	<-s
 
+	errNotify := tgclient.SendMessageViaHTTP(ctx, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID, "shutting down")
+	if errNotify != nil {
+		logger.Error().Err(errNotify).Msg("error notifying via tg")
+	}
+
 	if errShut := api.Shutdown(ctx); errShut != nil {
-		logger.Error().Err(errShut).Msg("error shuting down server: ")
+		logger.Error().Err(errShut).Msg("error shutting down server")
 	}
 }
 
@@ -84,5 +94,5 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 	var e = flightcontrolcenter.Env
 	var r = flightcontrolcenter.Revision
 	message := fmt.Sprintf("fcc branch=%s env=%s revision=%s", b, e, r)
-	return tgclient.SendMessageViaHTTP(context.Background(), api, chatID, message)
+	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message)
 }
