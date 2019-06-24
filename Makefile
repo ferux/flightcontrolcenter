@@ -66,6 +66,8 @@ deploy: build_linux
 .PHONY: install_tools
 install_tools:
 	@echo ">"Updating go-bindata
+	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata@v3.1.2
+	@echo ">"Updating go-bindata binaries
 	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
 	@echo ">"Updating quicktemplates
 	@GOBIN="$$PWD/bin" $(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
