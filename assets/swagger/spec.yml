@@ -58,6 +58,13 @@ paths:
           allowEmptyValue: false
           schema:
             type: string
+        - name: prognosis
+          description: Enable prognosis for selected stop
+          in: query
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Success
@@ -143,10 +150,15 @@ components:
       type: object
       properties:
         name:
+          description: Route name
           type: string
         next:
+          description: Arrival time
           type: string
           format: time
+        method:
+          description: "Time pick method"
+          type: string
         request_id:
           type: string
 

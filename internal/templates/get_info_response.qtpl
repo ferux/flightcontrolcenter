@@ -23,8 +23,10 @@ type MarshalData struct {
 
 {% code 
 type NextBus struct{
-        Next string `json:"next"`
-        Name string `json:"name"`
+        Next      string `json:"next"`
+        Name      string `json:"name"`
+        Method    string `json:"method"`
+        RequestID string `json:"request_id"`
 }
 %}
 
@@ -32,8 +34,10 @@ type NextBus struct{
 {% stripspace %}
 {% func (d *NextBus) JSON() %}
 {
-        "next": {%q= d.Next %},
-        "name": {%q= d.Name %}
+        "next":       {%q= d.Next %},
+        "name":       {%q= d.Name %},
+        "method":     {%q= d.Method %},
+        "request_id": {%q= d.RequestID %}
 }
 {% endstripspace %}
 {% endfunc %}

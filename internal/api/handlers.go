@@ -19,6 +19,7 @@ import (
 func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := fcontext.RequestID(ctx)
+	logger := zerolog.Ctx(ctx).With().Str("fn", "handleNextBus").Logger()
 
 	stopID := r.URL.Query().Get("stop_id")
 	if len(stopID) == 0 {
@@ -32,7 +33,14 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transport, err := api.yaclient.Fetch(stopID)
+	var prognosis bool
+	if r.URL.Query().Get("prognosis") == "true" {
+		prognosis = true
+	}
+
+	logger.Debug().Bool("prognosis", prognosis).Str("stop_id", stopID).Msg("fetching")
+
+	transportAll, err := api.yaclient.Fetch(ctx, stopID, prognosis)
 	if err != nil {
 		var response = model.ServiceError{
 			Message:   "something went wrong",
@@ -44,7 +52,57 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(transport.IncomingTransport) == 0 {
+	var filterRoute = r.URL.Query().Get("route")
+	var transports = make([]yandex.TransportInfo, 0, len(transportAll.IncomingTransport))
+	for _, tr := range transportAll.IncomingTransport {
+		if !strings.Contains(tr.Name, filterRoute) {
+			continue
+		}
+		transports = append(transports, tr)
+	}
+
+	logger.Debug().Interface("transport", transports).Msg("done")
+
+	var first = yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24)}
+	var found bool
+
+	switch len(transports) {
+	case 0:
+		logger.Debug().Msg("no incoming transport")
+		var response = model.ServiceError{
+			Message:   "not found",
+			RequestID: rid,
+			Code:      http.StatusNotFound,
+		}
+
+		api.serveError(ctx, w, r, response)
+		return
+	case 1:
+		first = transports[0]
+		found = true
+	default:
+		logger.Debug().Int("amount", len(transports)).Msg("found buses")
+		first = transports[0]
+		for _, tr := range transports {
+			if !strings.Contains(tr.Name, filterRoute) {
+				continue
+			}
+
+			if tr.Arrive.Hour() < time.Now().Hour() {
+				continue
+			}
+
+			if tr.Arrive.Before(first.Arrive) {
+				found = true
+				first = tr
+			}
+
+		}
+	}
+
+	logger.Debug().Interface("result", first).Msg("done")
+
+	if !strings.Contains(first.Name, filterRoute) && !found {
 		var response = model.ServiceError{
 			Message:   "not found",
 			RequestID: rid,
@@ -55,29 +113,14 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var first = yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24 * 7)}
-	var filterRoute = r.URL.Query().Get("route")
-	for _, tr := range transport.IncomingTransport {
-		if !strings.Contains(tr.Name, filterRoute) {
-			continue
-		}
-
-		// let's think the next bus time can't be after 23 hours.
-		if tr.Arrive.Hour() < time.Now().Hour() {
-			tr.Arrive = tr.Arrive.Add(time.Hour * 24)
-		}
-
-		if tr.Arrive.Before(first.Arrive) {
-			first = tr
-		}
-	}
-
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	(&templates.NextBus{
-		Name: first.Name,
-		Next: first.Arrive.Format("15:04"),
+		Name:      first.Name,
+		Next:      first.Arrive.Format("15:04"),
+		Method:    first.Method,
+		RequestID: rid,
 	}).WriteJSON(w)
 }
 
