@@ -37,7 +37,7 @@ func main() {
 			Msg("parsing config file")
 	}
 
-	if *showRevision == true {
+	if *showRevision {
 		return
 	}
 
