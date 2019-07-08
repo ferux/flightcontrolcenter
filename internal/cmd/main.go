@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
-
-	"github.com/getsentry/raven-go"
-	"github.com/rs/zerolog"
 
 	"github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/api"
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
+
+	"github.com/getsentry/raven-go"
+	"github.com/rs/zerolog"
 )
 
 func main() {
@@ -24,11 +24,6 @@ func main() {
 	showRevision := flag.Bool("revision", false, "show version of the application")
 
 	flag.Parse()
-
-	if *showRevision {
-		fmt.Println(flightcontrolcenter.Revision)
-		return
-	}
 
 	logger := zerolog.New(os.Stdout)
 	cfg, err := config.Parse(*path)
@@ -40,6 +35,10 @@ func main() {
 			Str("branch", flightcontrolcenter.Branch).
 			Str("env", flightcontrolcenter.Env).
 			Msg("parsing config file")
+	}
+
+	if *showRevision == true {
+		return
 	}
 
 	logger.
@@ -69,11 +68,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
-	go func() {
-		if err := sendNotificationMessage(ctx, tgclient, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID); err != nil {
+	go func(ctx context.Context, tgclient telegram.Client, api, chatID string, logger zerolog.Logger) {
+		if err := sendNotificationMessage(ctx, tgclient, api, chatID); err != nil {
 			logger.Error().Err(err).Msg("can't notify telegram")
 		}
-	}()
+	}(ctx, tgclient, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID, logger)
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGQUIT)
@@ -90,9 +89,13 @@ func main() {
 }
 
 func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api, chatID string) error {
-	var b = flightcontrolcenter.Branch
-	var e = flightcontrolcenter.Env
-	var r = flightcontrolcenter.Revision
-	message := fmt.Sprintf("fcc branch=%s env=%s revision=%s", b, e, r)
-	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message)
+	var message = strings.Builder{}
+	message.Grow(64)
+	message.WriteString("fcc branch=")
+	message.WriteString(flightcontrolcenter.Branch)
+	message.WriteString(" env=")
+	message.WriteString(flightcontrolcenter.Env)
+	message.WriteString(" revision=")
+	message.WriteString(flightcontrolcenter.Revision)
+	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message.String())
 }
