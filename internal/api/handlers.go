@@ -6,13 +6,12 @@ import (
 	"strings"
 	"time"
 
-	fcc "github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/templates"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
 
@@ -124,32 +123,37 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	}).WriteJSON(w)
 }
 
-func (api *HTTP) handleInfo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
+func (api *HTTP) handleInfo(info model.ApplicationInfo) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "application/json")
+		w.WriteHeader(http.StatusOK)
 
-	(&templates.MarshalData{
-		Revision:     fcc.Revision,
-		Branch:       fcc.Branch,
-		BootTime:     api.bootTime.String(),
-		Uptime:       time.Since(api.bootTime).Seconds(),
-		RequestCount: int(api.requestCount),
-	}).WriteJSON(w)
+		(&templates.MarshalData{
+			Revision:     info.Revision,
+			Branch:       info.Branch,
+			Environment:  info.Environment,
+			BootTime:     api.bootTime.String(),
+			Uptime:       time.Since(api.bootTime).Seconds(),
+			RequestCount: int(api.requestCount),
+		}).WriteJSON(w)
+	}
 }
 
-func (api *HTTP) handleSendMessage(w http.ResponseWriter, r *http.Request) {
-	var ctx = r.Context()
-	var apiKey = r.URL.Query().Get("api")
-	var chatID = r.URL.Query().Get("chat_id")
-	var text = r.URL.Query().Get("text")
+func (api *HTTP) handleSendMessage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var ctx = r.Context()
+		var apiKey = r.URL.Query().Get("api")
+		var chatID = r.URL.Query().Get("chat_id")
+		var text = r.URL.Query().Get("text")
 
-	err := api.tgclient.SendMessageViaHTTP(ctx, apiKey, chatID, text)
-	if err != nil {
-		api.serveError(ctx, w, r, err)
-		return
+		err := api.tgclient.SendMessageViaHTTP(ctx, apiKey, chatID, text)
+		if err != nil {
+			api.serveError(ctx, w, r, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
@@ -171,8 +175,13 @@ func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.
 
 	logger.Error().Err(responseError).Msg("captured error")
 
-	ravenRequest := raven.NewHttp(r)
-	api.notifier.CaptureError(err, nil, ravenRequest)
+	api.notifier.CaptureException(err, &sentry.EventHint{
+		Context:           ctx,
+		EventID:           rid,
+		Request:           r,
+		OriginalException: err,
+		Data:              responseError,
+	}, sentry.NewScope())
 
 	asJSON(ctx, w, responseError, responseError.Code)
 }

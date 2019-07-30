@@ -133,6 +133,9 @@ components:
         branch:
           type: string
           description: Branch thas has been used to build app
+        environment:
+          type: string
+          description: Environment restriction
         boot:
           type: string
           format: date-time

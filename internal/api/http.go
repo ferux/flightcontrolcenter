@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
 
@@ -22,7 +23,7 @@ type HTTP struct {
 	yaclient yandex.Client
 	tgclient telegram.Client
 	logger   zerolog.Logger
-	notifier *raven.Client
+	notifier *sentry.Client
 
 	requestCount int64
 	bootTime     time.Time
@@ -34,7 +35,8 @@ func NewHTTP(
 	yaclient yandex.Client,
 	tgclient telegram.Client,
 	logger zerolog.Logger,
-	nClient *raven.Client,
+	nClient *sentry.Client,
+	appInfo model.ApplicationInfo,
 ) (*HTTP, error) {
 	to := cfg.HTTP.Timeout.Std()
 	srv := &http.Server{
@@ -54,7 +56,7 @@ func NewHTTP(
 		bootTime: time.Now(),
 		notifier: nClient,
 	}
-	api.setupRoutes()
+	api.setupRoutes(appInfo)
 
 	return api, nil
 }
@@ -66,7 +68,7 @@ func (api *HTTP) Serve() {
 		err := api.srv.ListenAndServe()
 		if err != nil {
 			api.logger.Error().Err(err).Msg("interrupted")
-			api.notifier.CaptureError(err, map[string]string{"msg": "interrupted"})
+			api.notifier.CaptureException(err, nil, sentry.NewScope())
 		}
 	}()
 }

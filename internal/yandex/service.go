@@ -16,6 +16,7 @@ type Client interface {
 }
 
 // New initialisates new client. It's acceptable to pass nil for logger
+// nolint:interfacer
 func New(l logger.Logger) (Client, error) {
 	c, err := yandexmapclient.New(yandexmapclient.WithLogger(l))
 	if err != nil {
@@ -59,10 +60,10 @@ func extractTransportInfo(tr yandexmapclient.TransportInfo) TransportInfo {
 
 		if !tr.BriefSchedule.Events[0].Scheduled.Time.IsZero() {
 			ti.Arrive = tr.BriefSchedule.Events[0].Scheduled.Time
-		ti.Method = "scheduled (best)"
+			ti.Method = "scheduled (best)"
 		} else {
 			ti.Arrive = tr.BriefSchedule.Events[0].Estimated.Time
-		ti.Method = "estimated (good)"
+			ti.Method = "estimated (good)"
 		}
 
 		return ti

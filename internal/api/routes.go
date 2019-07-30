@@ -3,12 +3,13 @@ package api
 import (
 	"net/http"
 
+	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/static"
 
 	"github.com/gorilla/mux"
 )
 
-func (api *HTTP) setupRoutes() {
+func (api *HTTP) setupRoutes(info model.ApplicationInfo) {
 	router := mux.NewRouter()
 
 	// swagger files
@@ -18,8 +19,8 @@ func (api *HTTP) setupRoutes() {
 	// api/v1 base path handlers
 	v1 := router.PathPrefix("/api/v1").Subrouter()
 	v1.Use(middlewareCounter(api), middlewareRequestID(), middlewareLogger(api.logger))
-	v1.HandleFunc("/info", api.handleInfo)
+	v1.HandleFunc("/info", api.handleInfo(info))
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
-	v1.HandleFunc("/send_message", api.handleSendMessage).Methods(http.MethodGet)
+	v1.HandleFunc("/send_message", api.handleSendMessage()).Methods(http.MethodGet)
 	api.srv.Handler = router
 }

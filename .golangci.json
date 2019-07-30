@@ -1,0 +1,13 @@
+{
+  "run": {
+    "deadline": "1m",
+    "tests": true,
+    "skip-dirs": [
+      "internal/device"
+    ]
+  },
+  "modules-download-mode": "vendor",
+  "linters": {
+    "enable-all": true
+  }
+}

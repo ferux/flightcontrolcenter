@@ -1,3 +1,6 @@
+export GO111MODULE=on
+export GOBUILDFLAGS=-mod vendor -tag=netgo
+
 GO=go
 
 PKG=$(shell $(GO) list | head -1 | sed -e 's/.*///')
@@ -5,6 +8,7 @@ PKG_PATH=$(shell $(GO) list | head -1)
 
 BRANCH?=$(shell git symbolic-ref --short HEAD)
 REVISION?=$(shell git rev-parse --short HEAD)
+ENV?=production
 OUT?=bin/fcc
 
 GOOS?=linux
@@ -23,7 +27,7 @@ run: build
 .PHONY: build
 build: build_static
 	@echo ">"Building...
-	@go build -ldflags '-X $(PKG_PATH).Revision=$(REVISION) -X $(PKG_PATH).Branch=$(BRANCH)' -o $(OUT) ./internal/cmd/main.go
+	@$(GO) build -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
 
 .PHONY: build_static
 build_static: 

@@ -2,6 +2,7 @@
 type MarshalData struct {
         Revision string `json:"revision"`
         Branch string `json:"branch"`
+        Environment string `json:"environment"`
         BootTime string `json:"boot"`
         Uptime float64 `json:"uptime"`
         RequestCount int `json:"request_count"`
@@ -14,6 +15,7 @@ type MarshalData struct {
 {
         "revision": {%q= d.Revision %},
         "branch": {%q= d.Branch %},
+        "environment": {%q= d.Environment %},
         "boot": {%q= d.BootTime %},
         "uptime": {%f.0= d.Uptime %},
         "request_count": {%d= d.RequestCount %}

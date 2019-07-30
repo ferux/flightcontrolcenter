@@ -9,14 +9,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter"
 	"github.com/ferux/flightcontrolcenter/internal/api"
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
+)
+
+var (
+	revision string // nolint:gochecknoglobals
+	branch   string // nolint:gochecknoglobals
+	env      string // nolint:gochecknoglobals
 )
 
 func main() {
@@ -31,9 +37,9 @@ func main() {
 		logger.
 			Fatal().
 			Err(err).
-			Str("revision", flightcontrolcenter.Revision).
-			Str("branch", flightcontrolcenter.Branch).
-			Str("env", flightcontrolcenter.Env).
+			Str("revision", revision).
+			Str("branch", branch).
+			Str("env", env).
 			Msg("parsing config file")
 	}
 
@@ -44,8 +50,9 @@ func main() {
 	logger.
 		Debug().
 		Interface("config", cfg).
-		Str("rev", flightcontrolcenter.Branch).
-		Str("branch", flightcontrolcenter.Branch).
+		Str("rev", revision).
+		Str("branch", branch).
+		Str("env", env).
 		Msg("starting application")
 
 	yaclient, err := yandex.New(nil)
@@ -54,15 +61,27 @@ func main() {
 	}
 
 	// TODO: hide sentry under interface implementation
-	notifierClient, err := raven.New(cfg.SentryDSN)
+	notifierClient, err := sentry.NewClient(sentry.ClientOptions{
+		Dsn:         cfg.SentryDSN,
+		Debug:       !strings.EqualFold(env, "production"),
+		Environment: env,
+		ServerName:  "fcc.loyso.art",
+		Release:     revision,
+		SampleRate:  1,
+	})
+
+	// notifierClient, err := raven.New(cfg.SentryDSN)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("can't create sentry client")
 	}
-	notifierClient.SetRelease(flightcontrolcenter.Revision)
-	notifierClient.SetEnvironment(flightcontrolcenter.Env)
 
 	tgclient := telegram.New()
-	api, _ := api.NewHTTP(cfg, yaclient, tgclient, logger, notifierClient)
+	var appInfo = model.ApplicationInfo{
+		Branch:      branch,
+		Revision:    revision,
+		Environment: env,
+	}
+	api, _ := api.NewHTTP(cfg, yaclient, tgclient, logger, notifierClient, appInfo)
 	api.Serve()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -92,10 +111,10 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 	var message = strings.Builder{}
 	message.Grow(64)
 	message.WriteString("fcc branch=")
-	message.WriteString(flightcontrolcenter.Branch)
+	message.WriteString(branch)
 	message.WriteString(" env=")
-	message.WriteString(flightcontrolcenter.Env)
+	message.WriteString(env)
 	message.WriteString(" revision=")
-	message.WriteString(flightcontrolcenter.Revision)
+	message.WriteString(revision)
 	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message.String())
 }
