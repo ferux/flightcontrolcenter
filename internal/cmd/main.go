@@ -15,6 +15,7 @@ import (
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
+	pkglogger "github.com/ferux/flightcontrolcenter/internal/logger"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
@@ -55,7 +56,7 @@ func main() {
 		Str("env", env).
 		Msg("starting application")
 
-	yaclient, err := yandex.New(nil)
+	yaclient, err := yandex.New(pkglogger.New())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("can't create yandex client")
 	}

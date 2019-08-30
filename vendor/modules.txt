@@ -1,4 +1,4 @@
-# github.com/ferux/yandexmapclient v0.0.0-20190814085926-c65db5f26311
+# github.com/ferux/yandexmapclient v1.1.5
 github.com/ferux/yandexmapclient
 # github.com/getsentry/sentry-go v0.2.1
 github.com/getsentry/sentry-go
