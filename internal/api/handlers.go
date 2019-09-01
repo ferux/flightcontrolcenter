@@ -2,12 +2,15 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/templates"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
@@ -153,6 +156,31 @@ func (api *HTTP) handleSendMessage() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func (api *HTTP) handlePingMessage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var ctx = r.Context()
+		var msg ping.Message
+		err := json.NewDecoder(r.Body).Decode(&msg)
+		if err != nil {
+			api.serveError(ctx, w, r, err)
+			return
+		}
+
+		msg.IP, _, _ = net.SplitHostPort(r.RemoteAddr)
+
+		api.dstore.Ping(msg)
+	}
+}
+
+func (api *HTTP) handleGetDevices() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var ctx = r.Context()
+		devices := api.dstore.GetDevices()
+
+		asJSON(ctx, w, devices, http.StatusOK)
 	}
 }
 

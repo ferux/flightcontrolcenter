@@ -121,6 +121,40 @@ paths:
         '500':
           description: Failure
 
+  /ping:
+    post:
+      tags:
+      - device
+      summary: Updates device status
+      operationId: handlePingMessage
+      requestBody:
+        description: Upsert a device via ping message
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceMessage'
+
+      responses:
+        '200':
+          description: Success
+
+  /devices:
+    get:
+      tags:
+      - device
+      summary: Lists all registered devices
+      operationId: handleGetDevices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
 components:
   schemas:
 
@@ -164,6 +198,35 @@ components:
           type: string
         request_id:
           type: string
+
+    DeviceMessage:
+      description: A single device that pinged this service via /ping handler
+      type: object
+      properties:
+        name:
+          type: string
+          description: Device's name
+        type:
+          type: string
+        revision:
+          type: string
+        branch:
+          type: string
+
+    Device:
+      description: Device info
+      allOf:
+      - $ref: '#/components/schemas/DeviceMessage'
+      - type: object
+        properties:
+          is_onlie:
+            type: boolean
+          created_at:
+            type: string
+          updated_at:
+            type: string
+          pinged_at:
+            type: string
 
     ServiceError:
       description: Common error

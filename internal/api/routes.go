@@ -22,5 +22,7 @@ func (api *HTTP) setupRoutes(info model.ApplicationInfo) {
 	v1.HandleFunc("/info", api.handleInfo(info))
 	v1.HandleFunc("/nextbus", api.handleNextBus).Methods(http.MethodGet)
 	v1.HandleFunc("/send_message", api.handleSendMessage()).Methods(http.MethodGet)
+	v1.HandleFunc("/ping", api.handlePingMessage()).Methods(http.MethodPost)
+	v1.HandleFunc("/devices", api.handleGetDevices()).Methods(http.MethodGet)
 	api.srv.Handler = router
 }

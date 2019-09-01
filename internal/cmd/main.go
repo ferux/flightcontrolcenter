@@ -12,6 +12,7 @@ import (
 	"github.com/ferux/flightcontrolcenter/internal/api"
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
@@ -82,7 +83,10 @@ func main() {
 		Revision:    revision,
 		Environment: env,
 	}
-	api, _ := api.NewHTTP(cfg, yaclient, tgclient, logger, notifierClient, appInfo)
+
+	dstore := ping.New(notifierClient)
+
+	api, _ := api.NewHTTP(cfg, yaclient, tgclient, dstore, logger, notifierClient, appInfo)
 	api.Serve()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)

@@ -23,8 +23,13 @@ func New() Logger {
 	return logger{}
 }
 
+// nolint:gochecknoglobals
 var dlogger = log.New(os.Stdout, "[DEBU] ", log.Lmicroseconds)
+
+// nolint:gochecknoglobals
 var ilogger = log.New(os.Stdout, "[INFO] ", log.Lmicroseconds)
+
+// nolint:gochecknoglobals
 var elogger = log.New(os.Stderr, "[ERRO] ", log.Lmicroseconds)
 
 func (logger) Debug(msg string)                          { dlogger.Print(msg) }

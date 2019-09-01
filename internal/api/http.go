@@ -8,6 +8,7 @@ import (
 
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 
@@ -20,6 +21,7 @@ const MaxHeaderBytes = 256 * (1 << 10) // 256 KiB
 type HTTP struct {
 	srv *http.Server
 
+	dstore   ping.Store
 	yaclient yandex.Client
 	tgclient telegram.Client
 	logger   zerolog.Logger
@@ -34,6 +36,7 @@ func NewHTTP(
 	cfg config.Application,
 	yaclient yandex.Client,
 	tgclient telegram.Client,
+	dstore ping.Store,
 	logger zerolog.Logger,
 	nClient *sentry.Client,
 	appInfo model.ApplicationInfo,
@@ -52,6 +55,7 @@ func NewHTTP(
 		srv:      srv,
 		yaclient: yaclient,
 		tgclient: tgclient,
+		dstore:   dstore,
 		logger:   logger,
 		bootTime: time.Now(),
 		notifier: nClient,
