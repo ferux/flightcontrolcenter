@@ -39,6 +39,8 @@ func middlewareLogger(logger zerolog.Logger) func(http.Handler) http.Handler {
 			lg.Debug().
 				Str("method", r.Method).
 				Str("request_uri", r.RequestURI).
+				Str("remote_addr", r.RemoteAddr).
+				Str("remote_addr_header", r.Header.Get("X-Forwarded-For")).
 				Msg("accepted")
 
 			h.ServeHTTP(w, r)

@@ -169,8 +169,12 @@ func (api *HTTP) handlePingMessage() http.HandlerFunc {
 			return
 		}
 
-		msg.IP, _, _ = net.SplitHostPort(r.RemoteAddr)
+		addr := r.Header.Get("X-Forwarded-For")
+		if len(addr) == 0 {
+			addr = r.RemoteAddr
+		}
 
+		msg.IP, _, _ = net.SplitHostPort(addr)
 		api.dstore.Ping(msg)
 	}
 }
