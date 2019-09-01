@@ -85,6 +85,7 @@ func main() {
 	}
 
 	dstore := ping.New(notifierClient)
+	dstore.Subscribe(deviceStateNotify(tgclient, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID))
 
 	api, _ := api.NewHTTP(cfg, yaclient, tgclient, dstore, logger, notifierClient, appInfo)
 	api.Serve()
@@ -122,4 +123,24 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 	message.WriteString(" revision=")
 	message.WriteString(revision)
 	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message.String())
+}
+
+func deviceStateNotify(tgclient telegram.Client, api, chatID string) ping.NotifyDeviceStateChanged {
+	return func(d *ping.Device) {
+		var message = strings.Builder{}
+		message.Grow(64)
+		message.WriteString("device ")
+		message.WriteString(d.Name)
+		message.WriteString(" (")
+		message.WriteString(d.IP)
+		if d.IsOnline {
+			message.WriteString(") is online now")
+		} else {
+			message.WriteString(") has gone offline")
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		defer cancel()
+		_ = tgclient.SendMessageViaHTTP(ctx, api, chatID, message.String())
+	}
 }
