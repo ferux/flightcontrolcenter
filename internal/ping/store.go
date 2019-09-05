@@ -94,7 +94,7 @@ func (c *store) updateDevicesState() {
 func (c *store) Ping(m Message) {
 	name := m.Name + "@" + m.IP
 	c.mu.RLock()
-	device, ok := c.devices[name]
+	device, ok := c.devices[m.ID]
 	c.mu.RUnlock()
 
 	now := time.Now()
@@ -108,7 +108,7 @@ func (c *store) Ping(m Message) {
 		}
 
 		c.mu.Lock()
-		c.devices[name] = device
+		c.devices[device.ID] = device
 		c.mu.Unlock()
 
 		c.logger.Debug().Str("device", name).Msg("registered")

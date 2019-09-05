@@ -169,12 +169,24 @@ func (api *HTTP) handlePingMessage() http.HandlerFunc {
 			return
 		}
 
+		if len(msg.ID) != 64 {
+			api.logger.Warn().Msg("device without id")
+			err = model.ServiceError{
+				Code:      http.StatusBadRequest,
+				RequestID: fcontext.RequestID(ctx),
+				Message:   "empty id",
+			}
+			api.serveError(ctx, w, r, err)
+			return
+		}
+
 		addr := r.Header.Get("X-Forwarded-For")
 		if len(addr) == 0 {
 			addr, _, _ = net.SplitHostPort(r.RemoteAddr)
 		}
 
 		msg.IP = addr
+		api.logger.Debug().Interface("msg", msg).Msg("served")
 		api.dstore.Ping(msg)
 	}
 }

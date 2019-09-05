@@ -128,7 +128,10 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 func deviceStateNotify(tgclient telegram.Client, api, chatID string) ping.NotifyDeviceStateChanged {
 	return func(d *ping.Device) {
 		var message = strings.Builder{}
-		message.Grow(64)
+		message.Grow(128)
+		message.WriteString("[")
+		message.WriteString(d.ID)
+		message.WriteString("] ")
 		message.WriteString("device ")
 		message.WriteString(d.Name)
 		message.WriteString(" (")
