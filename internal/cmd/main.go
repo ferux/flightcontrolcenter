@@ -134,14 +134,10 @@ func deviceStateNotify(tgclient telegram.Client, api, chatID string) ping.Notify
 		message.WriteString(d.Type)
 		message.WriteString("] @ ")
 		message.WriteString(d.IP)
-		message.WriteString("device ")
-		message.WriteString(d.Name)
-		message.WriteString(" (")
-		message.WriteString(d.IP)
 		if d.IsOnline {
-			message.WriteString(") is online now")
+			message.WriteString(" is online now")
 		} else {
-			message.WriteString(") has gone offline")
+			message.WriteString(" has gone offline")
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)

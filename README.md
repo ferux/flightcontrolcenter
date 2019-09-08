@@ -6,3 +6,4 @@ Serves personal needs.
 
 - [ ] Add telegram bot  
 - [ ] Proxy
+- [ ] Move to templates in notifications
