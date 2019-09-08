@@ -88,6 +88,7 @@ func (c *store) updateDevicesState() {
 			c.logger.Debug().Str("device", k).Msg("went offline")
 			device.IsOnline = false
 			c.notify(device)
+			c.UpsertDevice(device)
 		}
 	}
 }
