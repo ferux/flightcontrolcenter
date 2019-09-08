@@ -66,6 +66,8 @@ func (c *store) start() {
 // TODO: possibly might be very laggy if there will be a lot of devices. Copy map and procced it, maybe?
 func (c *store) updateDevicesState() {
 	now := time.Now()
+
+	// check if we lose too much time syncing things
 	c.mu.Lock()
 	if lockTime := time.Since(now); lockTime > time.Second*3 {
 		c.logger.Error().Dur("lock_time", lockTime).Msg("took too much time")
@@ -79,8 +81,7 @@ func (c *store) updateDevicesState() {
 			sentry.NewScope(),
 		)
 	}
-
-	defer c.mu.Unlock()
+	c.mu.Unlock()
 
 	for k := range c.devices {
 		device := c.devices[k]
