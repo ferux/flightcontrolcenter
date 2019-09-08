@@ -13,13 +13,15 @@ import (
 type Store interface {
 	Ping(msg Message)
 	Subscribe(fn NotifyDeviceStateChanged)
-	GetDevices() []*Device
+	GetDevices() []Device
+	GetDevice(id string) (Device, bool)
+	UpsertDevice(d Device)
 }
 
-type NotifyDeviceStateChanged func(d *Device)
+type NotifyDeviceStateChanged func(d Device)
 
 type store struct {
-	devices map[string]*Device
+	devices map[string]Device
 	mu      sync.RWMutex
 	subs    []NotifyDeviceStateChanged
 	logger  zerolog.Logger
@@ -30,7 +32,7 @@ func New(sentry *sentry.Client) Store {
 	s := &store{
 		sentry: sentry,
 
-		devices: make(map[string]*Device),
+		devices: make(map[string]Device),
 		logger:  zerolog.New(os.Stdout).With().Timestamp().Logger(),
 	}
 
@@ -43,7 +45,7 @@ func (c *store) Subscribe(fn NotifyDeviceStateChanged) {
 	c.subs = append(c.subs, fn)
 }
 
-func (c *store) notify(d *Device) {
+func (c *store) notify(d Device) {
 	if len(c.subs) == 0 {
 		return
 	}
@@ -92,14 +94,11 @@ func (c *store) updateDevicesState() {
 
 // Ping proceeds ping message from device and updates its state
 func (c *store) Ping(m Message) {
-	name := m.Name + "@" + m.IP
-	c.mu.RLock()
-	device, ok := c.devices[m.ID]
-	c.mu.RUnlock()
+	device, ok := c.getDevice(m.ID)
 
 	now := time.Now()
 	if !ok {
-		device = &Device{
+		device = Device{
 			Message:   m,
 			IsOnline:  true,
 			CreatedAt: now,
@@ -107,11 +106,8 @@ func (c *store) Ping(m Message) {
 			PingedAt:  now,
 		}
 
-		c.mu.Lock()
-		c.devices[device.ID] = device
-		c.mu.Unlock()
-
-		c.logger.Debug().Str("device", name).Msg("registered")
+		c.UpsertDevice(device)
+		c.logger.Debug().Str("ip", device.IP).Str("device", device.Name).Msg("registered")
 		c.notify(device)
 		return
 	}
@@ -122,36 +118,66 @@ func (c *store) Ping(m Message) {
 	}
 
 	device.PingedAt = now
-	if device.Revision != m.Revision {
+	if len(m.Revision) > 0 && device.Revision != m.Revision {
 		device.Revision = m.Revision
 		device.UpdatedAt = now
 	}
 
-	if device.Branch != m.Branch {
+	if len(m.Branch) > 0 && device.Branch != m.Branch {
 		device.Branch = m.Revision
 		device.UpdatedAt = now
 	}
 
+	if !m.BuildTime.IsZero() && device.BuildTime != m.BuildTime {
+		device.BuildTime = m.BuildTime
+	}
+
 	if !device.IsOnline {
-		c.logger.Debug().Str("device", name).Msg("came back online")
+		c.logger.Debug().Str("ip", device.IP).Str("device", device.Name).Msg("came back online")
 		device.IsOnline = true
 		c.notify(device)
 	}
+
+	c.UpsertDevice(device)
 }
 
 // GetDevices gets all stored devices
-func (c *store) GetDevices() []*Device {
+func (c *store) GetDevices() []Device {
 	if len(c.devices) == 0 {
-		return []*Device{}
+		return []Device{}
 	}
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	devices := make([]*Device, 0, len(c.devices))
+	devices := make([]Device, 0, len(c.devices))
 	for k := range c.devices {
 		device := c.devices[k]
 		devices = append(devices, device)
 	}
 	return devices
+}
+
+// Get a specific device
+func (c *store) GetDevice(id string) (Device, bool) {
+	return c.getDevice(id)
+}
+
+func (c *store) UpsertDevice(d Device) {
+	c.setDevice(d)
+}
+
+func (c *store) getDevice(id string) (Device, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	dev, ok := c.devices[id]
+	return dev, ok
+}
+
+func (c *store) setDevice(d Device) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.devices[d.ID] = d
 }

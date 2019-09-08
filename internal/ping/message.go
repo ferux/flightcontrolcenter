@@ -4,11 +4,12 @@ import "time"
 
 // Message stores information about device
 type Message struct {
-	ID       string `json:"id,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Revision string `json:"revision,omitempty"`
-	Branch   string `json:"branch,omitempty"`
+	ID        string    `json:"id,omitempty"`
+	Name      string    `json:"name,omitempty"`
+	Type      string    `json:"type,omitempty"`
+	Revision  string    `json:"revision,omitempty"`
+	Branch    string    `json:"branch,omitempty"`
+	BuildTime time.Time `json:"build_time,omitempty"`
 
 	IP string `json:"ip,omitempty"`
 }

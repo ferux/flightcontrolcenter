@@ -203,15 +203,22 @@ components:
       description: A single device that pinged this service via /ping handler
       type: object
       properties:
+        id:
+          type: string
+          description: Device's unique id
         name:
           type: string
           description: Device's name
         type:
           type: string
+          description: Device's type
         revision:
           type: string
         branch:
           type: string
+        build_time:
+          type: string
+          format: datetime
 
     Device:
       description: Device info
@@ -223,10 +230,13 @@ components:
             type: boolean
           created_at:
             type: string
+            format: datetime
           updated_at:
             type: string
+            format: datetime
           pinged_at:
             type: string
+            format: datetime
 
     ServiceError:
       description: Common error
