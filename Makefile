@@ -32,9 +32,9 @@ build: build_static
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@bin/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@bin/qtc -dir=./internal/templates
+	@qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
