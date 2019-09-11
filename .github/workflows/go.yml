@@ -20,10 +20,7 @@ jobs:
       env:
         GOMODULE111: on
       run: go mod download
-
-    - name: Install tools
-      run: make prepare
-     
+    
     - name: Generate static
       run: make build_static
 

@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOFLAGS=-mod vendor -tag=netgo
+export GOFLAGS=mod=vendor -tags=netgo
 
 GO=go
 
@@ -56,7 +56,7 @@ check:
 .PHONY: prepare
 prepare: install_tools
 	@echo ">"Installing linter
-	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.7.1
 
 .PHONY: deploy
 deploy: build_linux
@@ -67,14 +67,14 @@ deploy: build_linux
 	@echo ">"Starting service
 	@ssh $(SSH_USER)@$(SSH_HOST) systemctl start fcc
 
-.PHONY: install_tools
-install_tools:
-	@echo ">"Updating go-bindata
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata@v3.1.2
-	@echo ">"Updating go-bindata binaries
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
-	@echo ">"Updating quicktemplates
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
+# .PHONY: install_tools
+# install_tools:
+# 	@echo ">"Updating go-bindata
+# 	@$(GO) get github.com/go-bindata/go-bindata@v3.1.2
+# 	@echo ">"Updating go-bindata binaries
+# 	@$(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
+# 	@echo ">"Updating quicktemplates
+# 	@$(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
 
 .PHONY: test
 test:
