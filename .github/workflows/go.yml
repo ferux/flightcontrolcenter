@@ -2,8 +2,8 @@ name: Go
 on: [push]
 jobs:
 
-  build:
-    name: Build
+  prepare:
+    name: Prepare environment
     runs-on: ubuntu-latest
     steps:
 
@@ -16,31 +16,49 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
+    - name: Download modules
+      env:
+        GOMODULE111: on
+      run: go mod download
+
     - name: Install tools
       run: make prepare
      
     - name: Generate static
       run: make build_static
-      
-    - name: Statis check
-      run: make check
-
-    - name: Test package
-      run: make test
-      
-    - name: Build
-      run: make build
 
     - name: Decode ssh key
       env:
         SSH_HASH: ${{ secrets.SSH_HASH }}
       run: |
+        echo -e $SSH_HASH
         mkdir /tmp/ssh
         echo -e $SSH_HASH | base64 --decode > /tmp/ssh/deploy_key
         eval "$(ssh-agent -s)"
         chmod 600 /tmp/ssh/deploy_key
         ssh-add /tmp/ssh/deploy_key
 
+  check:
+    name: Check code for errors
+    steps:
+    - name: Statis check
+      run: make check
+
+  test:
+    name: run package tests
+    steps:
+    - name: Test package
+      run: make test
+
+  build:
+    name: build binary
+    steps:
+    - name: Build
+      run: make build
+
+  deploy:
+    name: deploy to vps
+    steps:
     - name: Deploy
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
