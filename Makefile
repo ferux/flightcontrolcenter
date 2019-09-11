@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOBUILDFLAGS=-mod vendor -tag=netgo
+export GOFLAGS=-mod vendor -tag=netgo
 
 GO=go
 
