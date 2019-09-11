@@ -30,3 +30,19 @@ jobs:
       
     - name: Build
       run: make build
+
+    - name: Decode ssh key
+      env:
+        SSH_HASH: ${{ secrets.SSH_HASH }}
+      run: |
+        mkdir /tmp/ssh
+        echo -e $SSH_HASH | base64 --decode > /tmp/ssh/deploy_key
+        eval "$(ssh-agent -s)"
+        chmod 600 /tmp/ssh/deploy_key
+        ssh-add /tmp/ssh/deploy_key
+
+    - name: Deploy
+      env:
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+      run: make deploy
