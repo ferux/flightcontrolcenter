@@ -38,27 +38,15 @@ jobs:
         chmod 600 /tmp/ssh/deploy_key
         ssh-add /tmp/ssh/deploy_key
 
-  check:
-    name: Check code for errors
-    steps:
     - name: Statis check
       run: make check
 
-  test:
-    name: run package tests
-    steps:
     - name: Test package
       run: make test
 
-  build:
-    name: build binary
-    steps:
     - name: Build
       run: make build
 
-  deploy:
-    name: deploy to vps
-    steps:
     - name: Deploy
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
