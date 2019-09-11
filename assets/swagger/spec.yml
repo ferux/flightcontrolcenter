@@ -1,0 +1,250 @@
+openapi: 3.0.1
+
+info:
+  title: Flight Control Center
+  description: Service for personal needs
+  version: 0.0.5
+  termsOfService: 'https://loyso.art/terms'
+  contact:
+    email: atrushkin@outlook.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+servers:
+  - url: '/api/v1'
+
+tags:
+  - name: bus
+    description: Retrieves information about bus stops
+  - name: service
+    description: Service information handlers
+
+paths:
+  /info:
+    get:
+      tags:
+        - service
+      summary: Get service info
+      operationId: handleInfo
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+        '500':
+          description: Failure
+
+  /nextbus:
+    get:
+      tags:
+        - bus
+      summary: Information about arriving bus
+      operationId: handleNextBus
+      parameters:
+        - name: stop_id
+          description: ID of the stop in yandex.maps
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: route
+          description: Filter parameter for including route name
+          in: query
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: prognosis
+          description: Enable prognosis for selected stop
+          in: query
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopInfo'
+        '404':
+          description: Stop ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Failure
+
+  /send_message:
+    get:
+      tags:
+      - telegram
+      summary: Send message to telegram
+      operationId: handleSendMessage
+      parameters:
+        - name: api
+          description: api key
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: chat_id
+          description: user id or chat id
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: text
+          description: message to send
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Query problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Failure
+
+  /ping:
+    post:
+      tags:
+      - device
+      summary: Updates device status
+      operationId: handlePingMessage
+      requestBody:
+        description: Upsert a device via ping message
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceMessage'
+
+      responses:
+        '200':
+          description: Success
+
+  /devices:
+    get:
+      tags:
+      - device
+      summary: Lists all registered devices
+      operationId: handleGetDevices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
+components:
+  schemas:
+
+    ServiceInfo:
+      type: object
+      properties:
+        revision:
+          type: string
+          description: Application Revision
+        branch:
+          type: string
+          description: Branch thas has been used to build app
+        environment:
+          type: string
+          description: Environment restriction
+        boot:
+          type: string
+          format: date-time
+          description: Then the service has been started
+        uptime:
+          type: string
+          description: Uptime
+        request_count:
+          type: integer
+          format: int64
+          description: 'Amount of requests, served since boot'
+
+    StopInfo:
+      description: Time of next bus and route name
+      type: object
+      properties:
+        name:
+          description: Route name
+          type: string
+        next:
+          description: Arrival time
+          type: string
+          format: time
+        method:
+          description: "Time pick method"
+          type: string
+        request_id:
+          type: string
+
+    DeviceMessage:
+      description: A single device that pinged this service via /ping handler
+      type: object
+      properties:
+        id:
+          type: string
+          description: Device's unique id
+        name:
+          type: string
+          description: Device's name
+        type:
+          type: string
+          description: Device's type
+        revision:
+          type: string
+        branch:
+          type: string
+        build_time:
+          type: string
+          format: datetime
+
+    Device:
+      description: Device info
+      allOf:
+      - $ref: '#/components/schemas/DeviceMessage'
+      - type: object
+        properties:
+          is_onlie:
+            type: boolean
+          created_at:
+            type: string
+            format: datetime
+          updated_at:
+            type: string
+            format: datetime
+          pinged_at:
+            type: string
+            format: datetime
+
+    ServiceError:
+      description: Common error
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message about an error
+        request_id:
+          type: string
+          description: Request ID

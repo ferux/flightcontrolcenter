@@ -15,6 +15,7 @@ type StopInfo struct {
 type TransportInfo struct {
 	Name   string
 	Arrive time.Time
+	Method string
 }
 
 type client struct {

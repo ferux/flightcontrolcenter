@@ -1,6 +1,7 @@
 package yandex
 
 import (
+	"context"
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/logger"
@@ -10,11 +11,12 @@ import (
 
 // Client for interacting with yandex client
 type Client interface {
-	Fetch(stopID string) (StopInfo, error)
+	Fetch(ctx context.Context, stopID string, prognosis bool) (StopInfo, error)
 	UpdateToken() error
 }
 
 // New initialisates new client. It's acceptable to pass nil for logger
+// nolint:interfacer
 func New(l logger.Logger) (Client, error) {
 	c, err := yandexmapclient.New(yandexmapclient.WithLogger(l))
 	if err != nil {
@@ -24,8 +26,8 @@ func New(l logger.Logger) (Client, error) {
 	return &client{c: c}, nil
 }
 
-func (c *client) Fetch(stopID string) (StopInfo, error) {
-	si, err := c.c.FetchStopInfo(stopID)
+func (c *client) Fetch(ctx context.Context, stopID string, prognosis bool) (StopInfo, error) {
+	si, err := c.c.FetchStopInfo(ctx, stopID, prognosis)
 	if err != nil {
 		return StopInfo{}, err
 	}
@@ -35,17 +37,47 @@ func (c *client) Fetch(stopID string) (StopInfo, error) {
 	}
 
 	var s = StopInfo{IncomingTransport: make([]TransportInfo, 0, len(si.Data.Properties.StopMetaData.Transport))}
-	var now = time.Now()
+
+	if len(si.Data.Properties.StopMetaData.Transport) == 0 {
+		return StopInfo{}, nil
+	}
+
 	for _, tr := range si.Data.Properties.StopMetaData.Transport {
-		t, err := time.Parse("15:04", tr.BriefSchedule.DepartureTime)
-		if err != nil {
+		ti := extractTransportInfo(tr)
+		if time.Now().After(ti.Arrive) {
 			continue
 		}
-		t.AddDate(now.Year(), int(now.Month()-1), now.Day())
-		s.IncomingTransport = append(s.IncomingTransport, TransportInfo{Name: tr.Name, Arrive: t})
+
+		s.IncomingTransport = append(s.IncomingTransport, ti)
 	}
 
 	return s, nil
+}
+
+func extractTransportInfo(tr yandexmapclient.TransportInfo) TransportInfo {
+	var ti = TransportInfo{Name: tr.Name}
+	if len(tr.BriefSchedule.Events) > 0 {
+
+		if !tr.BriefSchedule.Events[0].Scheduled.Time.IsZero() {
+			ti.Arrive = tr.BriefSchedule.Events[0].Scheduled.Time
+			ti.Method = "scheduled (best)"
+		} else {
+			ti.Arrive = tr.BriefSchedule.Events[0].Estimated.Time
+			ti.Method = "estimated (good)"
+		}
+
+		return ti
+	}
+
+	if time.Now().After(tr.BriefSchedule.Frequency.End.Time) {
+		ti.Method = "end (worst)"
+		ti.Arrive = tr.BriefSchedule.Frequency.Begin.Time
+		return ti
+	}
+
+	ti.Method = "frequency (so-so)"
+	ti.Arrive = time.Now().Add(time.Second * time.Duration(tr.BriefSchedule.Frequency.Value))
+	return ti
 }
 
 func (c *client) UpdateToken() error { return c.c.UpdateToken() }

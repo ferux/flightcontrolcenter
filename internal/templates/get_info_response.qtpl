@@ -1,0 +1,45 @@
+{% code
+type MarshalData struct {
+        Revision string `json:"revision"`
+        Branch string `json:"branch"`
+        Environment string `json:"environment"`
+        BootTime string `json:"boot"`
+        Uptime float64 `json:"uptime"`
+        RequestCount int `json:"request_count"`
+}
+%}
+
+// JSON marshaling
+{% stripspace %}
+{% func (d *MarshalData) JSON() %}
+{
+        "revision": {%q= d.Revision %},
+        "branch": {%q= d.Branch %},
+        "environment": {%q= d.Environment %},
+        "boot": {%q= d.BootTime %},
+        "uptime": {%f.0= d.Uptime %},
+        "request_count": {%d= d.RequestCount %}
+}
+{% endstripspace %}
+{% endfunc %}
+
+{% code 
+type NextBus struct{
+        Next      string `json:"next"`
+        Name      string `json:"name"`
+        Method    string `json:"method"`
+        RequestID string `json:"request_id"`
+}
+%}
+
+
+{% stripspace %}
+{% func (d *NextBus) JSON() %}
+{
+        "next":       {%q= d.Next %},
+        "name":       {%q= d.Name %},
+        "method":     {%q= d.Method %},
+        "request_id": {%q= d.RequestID %}
+}
+{% endstripspace %}
+{% endfunc %}
