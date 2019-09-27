@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOFLAGS=mod=vendor -tags=netgo
+export GOFLAGS=-mod=vendor -tags=netgo
 
 GO=go
 
@@ -79,3 +79,8 @@ deploy: build_linux
 .PHONY: test
 test:
 	go test -race -timeout 60s ./internal/...
+
+.PHONY: vendor
+vendor:
+	go mod tidy
+	go mod vendor

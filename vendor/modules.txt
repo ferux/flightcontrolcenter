@@ -205,20 +205,20 @@ github.com/valyala/bytebufferpool
 # github.com/valyala/fastjson v1.4.1
 github.com/valyala/fastjson
 github.com/valyala/fastjson/fastfloat
-# github.com/valyala/quicktemplate v1.2.0
+# github.com/valyala/quicktemplate v1.1.1
 github.com/valyala/quicktemplate/qtc
 github.com/valyala/quicktemplate
 github.com/valyala/quicktemplate/parser
-# golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
+# golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/sys v0.0.0-20190312061237-fead79001313
+# golang.org/x/sys v0.0.0-20190910064555-bbd175535a8b
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.0
+# golang.org/x/text v0.3.2
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.0.0-20190521203540-521d6ed310dd
+# golang.org/x/tools v0.0.0-20190911022129-16c5e0f7d110
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/ssa
