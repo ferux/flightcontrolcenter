@@ -7,7 +7,6 @@ platform:
   os: linux
   arch: arm64
 
-
 steps:
   - name: greeting
     image: golang:1.12
@@ -16,3 +15,7 @@ steps:
     commands:
       - "go build"
       - "go test"
+
+trigger:
+  branch:
+  - master
