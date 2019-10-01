@@ -4,16 +4,23 @@ type: docker
 name: default
 
 steps:
-  - name: "install tools"
+  - name: "deploy"
     image: golang:1.12
     environment:
       GO111MODULE: on
+      SSH_PK:
+        from_secret: SSH_PK
+      SSH_HOST:
+        from_secret: SSH_HOST
+      SSH_USER:
+        from_secret: SSH_USER
     commands:
       - "make prepare"
       - "make check"
       - "make test"
-      - "make build"
+      - "make ssh_deploy"
 
 trigger:
   branch:
   - master
+  - test_drone

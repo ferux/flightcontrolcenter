@@ -43,11 +43,6 @@ build_linux: export OUT = bin/fcc_linux
 build_linux: build
 	@echo ">"Built for linux!
 
-.PHONY: build_remote
-build_remote: check
-	@git diff --quiet
-	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh
-
 .PHONY: check
 check:
 	@echo ">"Inspecting code...
@@ -57,15 +52,6 @@ check:
 prepare: install_tools
 	@echo ">"Installing linter
 	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
-.PHONY: deploy
-deploy: build_linux
-	@echo ">"Stoping service
-	@ssh $(SSH_USER)@$(SSH_HOST) systemctl stop fcc
-	@echo ">"Copying binary file
-	@scp bin/fcc_linux $(SSH_USER)@$(SSH_HOST):/opt/fcc/fcc
-	@echo ">"Starting service
-	@ssh $(SSH_USER)@$(SSH_HOST) systemctl start fcc
 
 .PHONY: install_tools
 install_tools:
@@ -79,3 +65,8 @@ install_tools:
 .PHONY: test
 test:
 	go test -race -timeout 60s ./internal/...
+
+.PHONY: ssh_deploy
+ssh_deploy: build_linux
+	$(info >Deploying via ssh)
+	@sh scripts/ssh_deploy.sh

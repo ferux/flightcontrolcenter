@@ -1,9 +1,9 @@
-name: Go
+name: Flight-Control-Center
 on: [push]
 jobs:
 
   build:
-    name: Build
+    name: Check-Test-Deploy
     runs-on: ubuntu-latest
     steps:
 
@@ -22,11 +22,15 @@ jobs:
     - name: Generate static
       run: make build_static
       
-    - name: Statis check
+    - name: Static check
       run: make check
 
     - name: Test package
       run: make test
       
-    - name: Build
-      run: make build
+    - name: Deploy
+      run: make ssh_deploy
+      env:
+        SSH_PK: ${{ secrets.SSH_PK }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USER: ${{ secrets.SSH_USER }}
