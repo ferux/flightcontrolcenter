@@ -1,0 +1,18 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+platform:
+  os: linux
+  arch: arm64
+
+
+steps:
+  - name: greeting
+    image: golang:1.12
+    environment:
+      GO111MODULE: on
+    commands:
+      - "go build"
+      - "go test"
