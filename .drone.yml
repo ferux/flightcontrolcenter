@@ -4,13 +4,15 @@ type: docker
 name: default
 
 steps:
-  - name: greeting
+  - name: "install tools"
     image: golang:1.12
     environment:
       GO111MODULE: on
     commands:
-      - "go build"
-      - "go test"
+      - "make prepare"
+      - "make check"
+      - "make test"
+      - "make build"
 
 trigger:
   branch:

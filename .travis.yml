@@ -8,7 +8,7 @@ addons:
 
 branches:
   only:
-  - master
+  - travis-deploy
 
 env:
   - GO111MODULE=on
