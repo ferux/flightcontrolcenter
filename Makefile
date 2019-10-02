@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOFLAGS=-mod=vendor -tags=netgo
+export GOFLAGS=-tags=netgo
 
 GO=go
 
@@ -27,14 +27,14 @@ run: build
 .PHONY: build
 build: build_static
 	@echo ">"Building...
-	@$(GO) build -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
+	@$(GO) build -mod=vendor -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
 
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@bin/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@qtc -dir=./internal/templates
+	@bin/qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -51,16 +51,16 @@ check:
 .PHONY: prepare
 prepare: install_tools
 	@echo ">"Installing linter
-	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.7.1
+	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.17.1
 
 .PHONY: install_tools
 install_tools:
 	@echo ">"Updating go-bindata
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata@v3.1.2
+	@GOBIN="$$PWD/bin" $(GO) get github.com/go-bindata/go-bindata@v3.1.2
 	@echo ">"Updating go-bindata binaries
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
+	@GOBIN="$$PWD/bin" $(GO) get github.com/go-bindata/go-bindata/...@v3.1.2
 	@echo ">"Updating quicktemplates
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
+	@GOBIN="$$PWD/bin" $(GO) get github.com/valyala/quicktemplate/qtc@v1.1.1
 
 .PHONY: test
 test:

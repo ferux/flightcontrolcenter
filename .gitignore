@@ -14,3 +14,6 @@
 
 /config.json
 .vscode
+
+internal/static/assets.go
+internal/templates/get_info_response.qtpl.go
