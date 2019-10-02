@@ -51,7 +51,8 @@ check:
 .PHONY: prepare
 prepare: install_tools
 	@echo ">"Installing linter
-	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.17.1
+	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
 
 .PHONY: install_tools
 install_tools:
