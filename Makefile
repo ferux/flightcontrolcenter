@@ -43,11 +43,6 @@ build_linux: export OUT = bin/fcc_linux
 build_linux: build
 	@echo ">"Built for linux!
 
-.PHONY: build_remote
-build_remote: check
-	@git diff --quiet
-	@ssh $(SSH_USER)@$(SSH_HOST) /opt/fcc/deploy.sh
-
 .PHONY: check
 check:
 	@echo ">"Inspecting code...
@@ -56,25 +51,16 @@ check:
 .PHONY: prepare
 prepare: install_tools
 	@echo ">"Installing linter
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.7.1
+	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.7.1
 
-.PHONY: deploy
-deploy: build_linux
-	@echo ">"Stoping service
-	@ssh $(SSH_USER)@$(SSH_HOST) systemctl stop fcc
-	@echo ">"Copying binary file
-	@scp bin/fcc_linux $(SSH_USER)@$(SSH_HOST):/opt/fcc/fcc
-	@echo ">"Starting service
-	@ssh $(SSH_USER)@$(SSH_HOST) systemctl start fcc
-
-# .PHONY: install_tools
-# install_tools:
-# 	@echo ">"Updating go-bindata
-# 	@$(GO) get github.com/go-bindata/go-bindata@v3.1.2
-# 	@echo ">"Updating go-bindata binaries
-# 	@$(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
-# 	@echo ">"Updating quicktemplates
-# 	@$(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
+.PHONY: install_tools
+install_tools:
+	@echo ">"Updating go-bindata
+	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata@v3.1.2
+	@echo ">"Updating go-bindata binaries
+	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
+	@echo ">"Updating quicktemplates
+	@GOBIN="$$PWD/bin" $(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
 
 .PHONY: test
 test:
@@ -84,3 +70,8 @@ test:
 vendor:
 	go mod tidy
 	go mod vendor
+
+.PHONY: ssh_deploy
+ssh_deploy: build_linux
+	$(info >Deploying via ssh)
+	@sh scripts/ssh_deploy.sh

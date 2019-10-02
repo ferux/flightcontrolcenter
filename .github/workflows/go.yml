@@ -1,9 +1,9 @@
-name: Go
+name: Flight-Control-Center
 on: [push]
 jobs:
 
-  prepare:
-    name: Prepare environment
+  build:
+    name: Check-Test-Deploy
     runs-on: ubuntu-latest
     steps:
 
@@ -16,36 +16,21 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Download modules
-      env:
-        GOMODULE111: on
-      run: go mod download
-    
+    - name: Install tools
+      run: make prepare
+
     - name: Generate static
       run: make build_static
 
-    - name: Decode ssh key
-      env:
-        SSH_HASH: ${{ secrets.SSH_HASH }}
-      run: |
-        echo -e $SSH_HASH
-        mkdir /tmp/ssh
-        echo -e $SSH_HASH | base64 --decode > /tmp/ssh/deploy_key
-        eval "$(ssh-agent -s)"
-        chmod 600 /tmp/ssh/deploy_key
-        ssh-add /tmp/ssh/deploy_key
-
-    - name: Statis check
+    - name: Static check
       run: make check
 
     - name: Test package
       run: make test
 
-    - name: Build
-      run: make build
-
     - name: Deploy
+      run: make ssh_deploy
       env:
-        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_PK: ${{ secrets.SSH_PK }}
         SSH_HOST: ${{ secrets.SSH_HOST }}
-      run: make deploy
+        SSH_USER: ${{ secrets.SSH_USER }}
