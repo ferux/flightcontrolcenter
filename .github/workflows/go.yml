@@ -63,13 +63,6 @@ jobs:
 
 ---
 
-name: Approve-Started
-on:
-  check_suite:
-    types: [completed]
-
----
-
 name: Check-Yandex
 on:
   schedule:
