@@ -1,36 +1,98 @@
+---
 name: Flight-Control-Center
-on: [push]
-jobs:
+on: 
+  push:
+    branches:
+      - master
+      - develop
+    tags:
+      - v*
 
-  build:
+jobs:
+  deploy:
     name: Check-Test-Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go 1.12
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.12
+        id: go
 
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      - name: Install tools
+        run: make prepare
 
-    - name: Install tools
-      run: make prepare
+      - name: Generate static
+        run: make build_static
 
-    - name: Generate static
-      run: make build_static
+      - name: Static check
+        run: make check
 
-    - name: Static check
-      run: make check
+      - name: Test package
+        run: make test
 
-    - name: Test package
-      run: make test
+      - name: Deploy
+        run: make ssh_deploy
+        env:
+          SSH_PK: ${{ secrets.SSH_PK }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+  check-alive:
+    name: Check service up
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health request
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && echo 0 || echo 1
+  check-dead:
+    name: Just test case
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step should fail
+        env:
+          HOST: ${{ secrets.SSH_HOST}}
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 500) > /dev/null && echo 0 || echo 1
 
-    - name: Deploy
-      run: make ssh_deploy
-      env:
-        SSH_PK: ${{ secrets.SSH_PK }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USER: ${{ secrets.SSH_USER }}
+---
+
+name: Approve-Started
+on:
+  check_suite:
+    types: [completed]
+
+---
+
+name: Check-Yandex
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check-service-alive:
+    name: Check Service Alive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health request
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && echo 0 || echo 1
+
+  check-yandex-api:
+    name: Check Yandex API the same
+    needs: check-service-alive
+    steps:
+      - name: Check yandex api the same
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          STOP_ID: 'stop__9644755'
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus) <(echo 200) > /dev/null && echo 0 || echo 1
