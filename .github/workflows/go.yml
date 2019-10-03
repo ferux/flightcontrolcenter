@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - develop
     tags:
       - v*
 
@@ -50,13 +49,3 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
         run: |
           diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && exit 0 || exit 1
-  check-dead:
-    name: Just test case
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Step should fail
-        env:
-          HOST: ${{ secrets.SSH_HOST}}
-        run: |
-          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 500) > /dev/null && exit 0 || exit 1
