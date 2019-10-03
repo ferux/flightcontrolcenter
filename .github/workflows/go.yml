@@ -60,32 +60,3 @@ jobs:
           HOST: ${{ secrets.SSH_HOST}}
         run: |
           diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 500) > /dev/null && echo 0 || echo 1
-
----
-
-name: Check-Yandex
-on:
-  schedule:
-    - cron: '0 0 * * *'
-
-jobs:
-  check-service-alive:
-    name: Check Service Alive
-    runs-on: ubuntu-latest
-    steps:
-      - name: Health request
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && echo 0 || echo 1
-
-  check-yandex-api:
-    name: Check Yandex API the same
-    needs: check-service-alive
-    steps:
-      - name: Check yandex api the same
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          STOP_ID: 'stop__9644755'
-        run: |
-          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus) <(echo 200) > /dev/null && echo 0 || echo 1
