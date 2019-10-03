@@ -12,6 +12,14 @@ jobs:
     name: Check-Test-Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Notify via telegram
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: Updating fcc [${{ github.ref }}] to revision ${{ github.sha }}
+
       - name: Set up Go 1.12
         uses: actions/setup-go@v1
         with:
@@ -39,6 +47,7 @@ jobs:
           SSH_PK: ${{ secrets.SSH_PK }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
+
   check-alive:
     name: Check service up
     needs: deploy
@@ -49,3 +58,11 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
         run: |
           diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify dead
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: fcc not available after deploy

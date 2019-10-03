@@ -14,6 +14,14 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
         run: |
           diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify service not available
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: fcc not available
 
   check-yandex-api:
     name: Check Yandex API the same
@@ -25,3 +33,11 @@ jobs:
           STOP_ID: 'stop__9644755'
         run: |
           diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify yandex.api broken
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: yandex.api wrong again
