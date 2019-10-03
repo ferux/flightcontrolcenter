@@ -1,0 +1,44 @@
+---
+name: Check-Yandex
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check-service-alive:
+    name: Check Service Alive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health request
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify service not available
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: fcc not available
+
+  check-yandex-api:
+    name: Check Yandex API the same
+    runs-on: ubuntu-latest
+    needs: check-service-alive
+    steps:
+      - name: Check yandex api the same
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          STOP_ID: 'stop__9644755'
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify yandex.api broken
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: yandex.api wrong again
