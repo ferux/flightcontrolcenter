@@ -19,7 +19,7 @@ before_install:
   - eval "$(ssh-agent -s)"
   - chmod 600 /tmp/ssh/deploy_key
   - ssh-add /tmp/ssh/deploy_key
-  - make prepare
+  - make install_tools
   - make check
   - make test
 

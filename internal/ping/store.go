@@ -176,7 +176,6 @@ func (c *store) MarkOffline(id string) {
 		c.notify(device)
 	}
 	c.setDevice(device)
-
 }
 
 // GetDevices gets all stored devices

@@ -57,7 +57,6 @@ func (c *client) Fetch(ctx context.Context, stopID string, prognosis bool) (Stop
 func extractTransportInfo(tr yandexmapclient.TransportInfo) TransportInfo {
 	var ti = TransportInfo{Name: tr.Name}
 	if len(tr.BriefSchedule.Events) > 0 {
-
 		if !tr.BriefSchedule.Events[0].Scheduled.Time.IsZero() {
 			ti.Arrive = tr.BriefSchedule.Events[0].Scheduled.Time
 			ti.Method = "scheduled (best)"

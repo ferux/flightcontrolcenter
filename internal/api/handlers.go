@@ -98,7 +98,6 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 				found = true
 				first = tr
 			}
-
 		}
 	}
 

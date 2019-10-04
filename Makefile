@@ -32,9 +32,9 @@ build: build_static
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@bin/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@bin/qtc -dir=./internal/templates
+	@qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -47,21 +47,6 @@ build_linux: build
 check:
 	@echo ">"Inspecting code...
 	@golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
-
-.PHONY: prepare
-prepare: install_tools
-	@echo ">"Installing linter
-	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
-
-.PHONY: install_tools
-install_tools:
-	@echo ">"Updating go-bindata
-	@GOBIN="$$PWD/bin" $(GO) get github.com/go-bindata/go-bindata@v3.1.2
-	@echo ">"Updating go-bindata binaries
-	@GOBIN="$$PWD/bin" $(GO) get github.com/go-bindata/go-bindata/...@v3.1.2
-	@echo ">"Updating quicktemplates
-	@GOBIN="$$PWD/bin" $(GO) get github.com/valyala/quicktemplate/qtc@v1.1.1
 
 .PHONY: test
 test:
@@ -76,3 +61,11 @@ vendor:
 ssh_deploy: build_linux
 	$(info >Deploying via ssh)
 	@sh scripts/ssh_deploy.sh
+
+download:
+	$(info downloading modules)
+	@$(GO) mod download
+
+install_tools: download
+	$(info installing tools)
+	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
