@@ -6,6 +6,8 @@ require (
 	github.com/ferux/yandexmapclient v1.1.5
 	github.com/getsentry/sentry-go v0.3.0
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
+	github.com/gogo/protobuf v1.3.0
+	github.com/golang/protobuf v1.3.1
 	github.com/golangci/golangci-lint v1.18.0
 	github.com/gorilla/mux v1.7.3
 	github.com/matryer/is v1.2.0

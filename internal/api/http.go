@@ -16,7 +16,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const MaxHeaderBytes = 256 * (1 << 10) // 256 KiB
+const (
+	maxHeaderBytes = 256 * (1 << 10) // 256 KiB
+	contentType    = "content-type"
+	contentJSON    = "application/json"
+)
 
 type HTTP struct {
 	srv *http.Server
@@ -48,7 +52,7 @@ func NewHTTP(
 		ReadHeaderTimeout: to,
 		WriteTimeout:      to,
 		IdleTimeout:       to,
-		MaxHeaderBytes:    MaxHeaderBytes,
+		MaxHeaderBytes:    maxHeaderBytes,
 	}
 
 	api := &HTTP{
@@ -83,7 +87,7 @@ func (api *HTTP) Shutdown(ctx context.Context) error {
 }
 
 func asJSON(ctx context.Context, w http.ResponseWriter, obj interface{}, code int) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set(contentType, contentJSON)
 	w.WriteHeader(code)
 
 	err := json.NewEncoder(w).Encode(obj)

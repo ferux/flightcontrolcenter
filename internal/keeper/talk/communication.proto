@@ -1,0 +1,77 @@
+syntax="proto3";
+package talk;
+
+// validate fields as well
+// import "github.com/mwitkow/go-proto-validators/validator.proto";
+// import "google/protobuf/timestamp.proto";
+
+enum MessageType {
+    UNKNOWN = 0;
+    APPROVE = 1;
+    DENY = 2;
+    PING = 3;
+    PONG = 4;
+    CLIENT_INFO = 5;
+
+}
+
+message APIVersion {
+    uint64 major = 1; // required field tbo
+    uint64 minor = 2; // required field tbo
+    uint64 patch = 3; // required field tbo
+    string extension = 4; // additional info, maybe rc or pre-build or whatever
+    
+}
+
+// ClientInfo is a message sent by client to identify itself
+message ClientInfo {
+    string device_id = 1; // unique id that has been generated on first run
+    APIVersion api_version = 2; // it's obvious
+    uint64 build_time = 3; // same
+    string revision = 4; // revision of built
+    string secret = 5; // secret is a hard-coded phrase
+    uint64 client_time = 6; // current client time (better send in UTC)
+    DeviceType device_type = 7;
+
+    enum DeviceType {
+        UNKNOWN = 0;
+        PHONE = 1;
+        MEDIA = 2;
+        PC = 3;
+
+    }
+
+}
+
+// Approve incoming `ClientInfo` request
+message Approve {
+    uint64 server_time = 2;
+}
+
+// Denied message to tell device service was unable to accept it
+message Denied {
+    string reason = 1; // why request has been denied
+    bool soft = 2; // should device try again or some actions required
+}
+
+// Inform server that disconnect is planned
+message GracefulGoodbye {
+    string reason = 1; // why shutdown called
+}
+
+// Ping client (usually issued by server to check client is still here)
+message Ping {}
+
+// Pong back to server to show client is still here.
+message Pong {}
+
+// MeasureLatencyRequest measures latency between devices
+message MeasureLatencyRequest {
+    uint64 current_time = 1;
+}
+
+message MeasureLatencyResponse {
+    // calculated value that should be get as the result of 
+    // (current_time - MeasureLatencyRequest.current_time) calculations
+    uint64 latency = 1;
+}

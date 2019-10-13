@@ -69,3 +69,8 @@ download:
 install_tools: download
 	$(info installing tools)
 	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
+
+proto_gen:
+	protoc -I internal/keeper/talk \
+	--gofast_out=plugins=grps:internal/keeper/talk/ \
+	internal/keeper/talk/*.proto
