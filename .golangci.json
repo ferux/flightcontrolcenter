@@ -6,8 +6,8 @@
       "internal/device"
     ]
   },
-  "modules-download-mode": "vendor",
   "linters": {
-    "enable-all": true
+    "enable-all": true,
+    "disable": ["lll", "gochecknoglobals", "bodyclose", "funlen"]
   }
 }

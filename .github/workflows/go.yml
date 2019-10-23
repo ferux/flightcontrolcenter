@@ -1,36 +1,68 @@
+---
 name: Flight-Control-Center
-on: [push]
-jobs:
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
 
-  build:
+jobs:
+  deploy:
     name: Check-Test-Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Notify via telegram
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: Updating fcc [${{ github.ref }}] to revision ${{ github.sha }}
 
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
+      - name: Set up Go 1.12
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.12
+        id: go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
 
-    - name: Install tools
-      run: make prepare
-     
-    - name: Generate static
-      run: make build_static
-      
-    - name: Static check
-      run: make check
+      - name: Install tools
+        run: make install_tools
 
-    - name: Test package
-      run: make test
-      
-    - name: Deploy
-      run: make ssh_deploy
-      env:
-        SSH_PK: ${{ secrets.SSH_PK }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USER: ${{ secrets.SSH_USER }}
+      - name: Generate static
+        run: make build_static
+
+      - name: Static check
+        run: make check
+
+      - name: Test package
+        run: make test
+
+      - name: Deploy
+        run: make ssh_deploy
+        env:
+          SSH_PK: ${{ secrets.SSH_PK }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+
+  check-alive:
+    name: Check service up
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health request
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/info) <(echo 200) > /dev/null && exit 0 || exit 1
+      - name: Notify dead
+        if: failure()
+        uses: appleboy/telegram-action@master
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+        with:
+          args: fcc not available after deploy

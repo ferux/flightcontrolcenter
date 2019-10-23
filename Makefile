@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOBUILDFLAGS=-mod vendor -tag=netgo
+export GOFLAGS=-tags=netgo
 
 GO=go
 
@@ -27,14 +27,14 @@ run: build
 .PHONY: build
 build: build_static
 	@echo ">"Building...
-	@$(GO) build -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
+	@$(GO) build -mod=vendor -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
 
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@bin/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@bin/qtc -dir=./internal/templates
+	@qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -48,25 +48,29 @@ check:
 	@echo ">"Inspecting code...
 	@golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
 
-.PHONY: prepare
-prepare: install_tools
-	@echo ">"Installing linter
-	@GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
-.PHONY: install_tools
-install_tools:
-	@echo ">"Updating go-bindata
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata@v3.1.2
-	@echo ">"Updating go-bindata binaries
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/go-bindata/go-bindata/...@v3.1.2
-	@echo ">"Updating quicktemplates
-	@GOBIN="$$PWD/bin" $(GO) get -u github.com/valyala/quicktemplate/qtc@v1.1.1
-
 .PHONY: test
 test:
 	go test -race -timeout 60s ./internal/...
+
+.PHONY: vendor
+vendor:
+	go mod tidy
+	go mod vendor
 
 .PHONY: ssh_deploy
 ssh_deploy: build_linux
 	$(info >Deploying via ssh)
 	@sh scripts/ssh_deploy.sh
+
+download:
+	$(info downloading modules)
+	@$(GO) mod download
+
+install_tools: download
+	$(info installing tools)
+	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
+
+proto_gen:
+	protoc -I internal/keeper/talk \
+	--gofast_out=plugins=grps:internal/keeper/talk/ \
+	internal/keeper/talk/*.proto
