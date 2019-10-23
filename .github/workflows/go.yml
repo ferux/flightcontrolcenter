@@ -1,6 +1,6 @@
 ---
 name: Flight-Control-Center
-on: 
+on:
   push:
     branches:
       - master
