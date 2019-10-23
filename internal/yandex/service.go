@@ -56,27 +56,32 @@ func (c *client) Fetch(ctx context.Context, stopID string, prognosis bool) (Stop
 
 func extractTransportInfo(tr yandexmapclient.TransportInfo) TransportInfo {
 	var ti = TransportInfo{Name: tr.Name}
-	if len(tr.BriefSchedule.Events) > 0 {
 
-		if !tr.BriefSchedule.Events[0].Scheduled.Time.IsZero() {
-			ti.Arrive = tr.BriefSchedule.Events[0].Scheduled.Time
+	if len(tr.Threads) == 0 {
+		return TransportInfo{}
+	}
+
+	bs := tr.Threads[0]
+	if len(bs.BriefSchedule.Events) > 0 {
+		if !bs.BriefSchedule.Events[0].Scheduled.Time.IsZero() {
+			ti.Arrive = bs.BriefSchedule.Events[0].Scheduled.Time
 			ti.Method = "scheduled (best)"
 		} else {
-			ti.Arrive = tr.BriefSchedule.Events[0].Estimated.Time
+			ti.Arrive = bs.BriefSchedule.Events[0].Estimated.Time
 			ti.Method = "estimated (good)"
 		}
 
 		return ti
 	}
 
-	if time.Now().After(tr.BriefSchedule.Frequency.End.Time) {
+	if time.Now().After(bs.BriefSchedule.Frequency.End.Time) {
 		ti.Method = "end (worst)"
-		ti.Arrive = tr.BriefSchedule.Frequency.Begin.Time
+		ti.Arrive = bs.BriefSchedule.Frequency.Begin.Time
 		return ti
 	}
 
 	ti.Method = "frequency (so-so)"
-	ti.Arrive = time.Now().Add(time.Second * time.Duration(tr.BriefSchedule.Frequency.Value))
+	ti.Arrive = time.Now().Add(time.Second * time.Duration(bs.BriefSchedule.Frequency.Value))
 	return ti
 }
 

@@ -1,6 +1,8 @@
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/ferux/yandexmapclient v1.1.5 h1:ZuVoXIl3Mn0XQ5bp2klXgAJ08IRuWkyBQXXKUiZyaVM=
 github.com/ferux/yandexmapclient v1.1.5/go.mod h1:dAWYEk3qEC0Hme+8DQzTeUIyvlY1BuoiNPKmuB8y+SY=
+github.com/ferux/yandexmapclient v1.1.6 h1:HXubW7+i+L0sb0flqXYkVzc9/eWOJVnoteJm+P7lZvY=
+github.com/ferux/yandexmapclient v1.1.6/go.mod h1:dAWYEk3qEC0Hme+8DQzTeUIyvlY1BuoiNPKmuB8y+SY=
 github.com/getsentry/sentry-go v0.2.1 h1:zCyr8wS1NQM7ixbWNh8lBRMlQZSM3aMXQCqXgCDwI44=
 github.com/getsentry/sentry-go v0.2.1/go.mod h1:2QfSdvxz4IZGyB5izm1TtADFhlhfj1Dcesrg8+A/T9Y=
 github.com/go-errors/errors v1.0.1 h1:LUHzmkK3GUKUrL/1gfBUxAHzcev3apQlezX/+O7ma6w=

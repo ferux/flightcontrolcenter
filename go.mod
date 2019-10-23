@@ -1,7 +1,7 @@
 module github.com/ferux/flightcontrolcenter
 
 require (
-	github.com/ferux/yandexmapclient v1.1.5
+	github.com/ferux/yandexmapclient v1.1.6
 	github.com/getsentry/sentry-go v0.2.1
 	github.com/gorilla/mux v1.7.1
 	github.com/matryer/is v1.2.0
