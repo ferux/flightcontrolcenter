@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/keeper/talk"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 )
@@ -141,14 +142,14 @@ func (c *Conn) DenyConnection(ctx context.Context, reason string, soft bool) err
 
 	data, err := proto.Marshal(&msg)
 	if err != nil {
-		errors.Wrap(err, "unable to marshal deny message")
+		return errors.Wrap(err, "unable to marshal deny message")
 	}
 
 	msgType := talk.MessageType_DENY
 
 	err = c.Send(ctx, msgType, data)
 	if err != nil {
-		log.Println("unable to send message: %v", err)
+		log.Printf("unable to send message: %v", err)
 	}
 
 	return c.Close()
