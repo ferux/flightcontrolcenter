@@ -50,7 +50,7 @@ check:
 
 .PHONY: test
 test:
-	go test -race -timeout 60s ./internal/...
+	go test -timeout 60s ./internal/...
 
 .PHONY: vendor
 vendor:
@@ -66,7 +66,7 @@ download:
 	$(info downloading modules)
 	@$(GO) mod download
 
-install_tools: download
+install_tools:
 	$(info installing tools)
 	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
 
