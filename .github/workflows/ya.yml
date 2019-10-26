@@ -33,7 +33,7 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
           STOP_ID: 'stop__9644755'
         run: |
-          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus) <(echo 200) > /dev/null && exit 0 || exit 1
+          diff <(curl -o /dev/null -sw "%{http_code}\n" https://fcc.${HOST}/api/v1/nextbus?stop_id=${STOP_ID}) <(echo 200) > /dev/null && exit 0 || exit 1
       - name: Notify yandex.api broken
         if: failure()
         uses: appleboy/telegram-action@master
