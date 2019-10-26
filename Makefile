@@ -73,5 +73,6 @@ install_tools:
 
 proto_gen:
 	protoc -I internal/keeper/talk \
-	--gofast_out=plugins=grps:internal/keeper/talk/ \
+	-I bin/protoc-gen-gofast \
+	--gofast_out=plugins=grpc:internal/keeper/talk/ \
 	internal/keeper/talk/*.proto
