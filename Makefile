@@ -1,5 +1,6 @@
 export GO111MODULE=on
 export GOFLAGS=-tags=netgo
+export GOBIN=$(PWD)/bin
 
 GO=go
 
@@ -32,9 +33,9 @@ build: build_static
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@$(GOBIN)/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@qtc -dir=./internal/templates
+	@$(GOBIN)/qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -46,7 +47,7 @@ build_linux: build
 .PHONY: check
 check:
 	@echo ">"Inspecting code...
-	@golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
+	@$(GOBIN)/golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
 
 .PHONY: test
 test:

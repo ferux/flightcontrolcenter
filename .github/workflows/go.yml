@@ -36,8 +36,6 @@ jobs:
         run: make install_tools
 
       - name: Generate static
-        env:
-          PATH: $PATH:$(go env GOPATH)
         run: make build_static
 
       - name: Static check
