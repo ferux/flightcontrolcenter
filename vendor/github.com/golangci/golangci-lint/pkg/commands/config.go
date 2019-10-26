@@ -34,6 +34,7 @@ func (e *Executor) initConfig() {
 	}
 	e.initRunConfiguration(pathCmd) // allow --config
 	cmd.AddCommand(pathCmd)
+
 }
 
 func (e *Executor) executePathCmd(_ *cobra.Command, args []string) {

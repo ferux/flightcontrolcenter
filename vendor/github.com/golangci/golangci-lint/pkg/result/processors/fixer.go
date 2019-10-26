@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golangci/golangci-lint/pkg/timeutils"
-
 	"github.com/golangci/golangci-lint/pkg/fsutils"
 
 	"github.com/golangci/golangci-lint/pkg/logutils"
@@ -24,20 +22,10 @@ type Fixer struct {
 	cfg       *config.Config
 	log       logutils.Log
 	fileCache *fsutils.FileCache
-	sw        *timeutils.Stopwatch
 }
 
 func NewFixer(cfg *config.Config, log logutils.Log, fileCache *fsutils.FileCache) *Fixer {
-	return &Fixer{
-		cfg:       cfg,
-		log:       log,
-		fileCache: fileCache,
-		sw:        timeutils.NewStopwatch("fixer", log),
-	}
-}
-
-func (f Fixer) printStat() {
-	f.sw.PrintStages()
+	return &Fixer{cfg: cfg, log: log, fileCache: fileCache}
 }
 
 func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
@@ -59,11 +47,7 @@ func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
 		}
 
 		for file, issuesToFix := range issuesToFixPerFile {
-			var err error
-			f.sw.TrackStage("all", func() {
-				err = f.fixIssuesInFile(file, issuesToFix) //nolint:scopelint
-			})
-			if err != nil {
+			if err := f.fixIssuesInFile(file, issuesToFix); err != nil {
 				f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
 
 				// show issues only if can't fix them
@@ -72,7 +56,6 @@ func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
 				}
 			}
 		}
-		f.printStat()
 		close(outCh)
 	}()
 

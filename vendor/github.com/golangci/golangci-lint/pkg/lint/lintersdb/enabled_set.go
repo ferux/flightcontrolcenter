@@ -3,30 +3,24 @@ package lintersdb
 import (
 	"sort"
 
-	"golang.org/x/tools/go/analysis"
-
-	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
-
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 )
 
 type EnabledSet struct {
-	m      *Manager
-	v      *Validator
-	log    logutils.Log
-	cfg    *config.Config
-	debugf logutils.DebugFunc
+	m   *Manager
+	v   *Validator
+	log logutils.Log
+	cfg *config.Config
 }
 
 func NewEnabledSet(m *Manager, v *Validator, log logutils.Log, cfg *config.Config) *EnabledSet {
 	return &EnabledSet{
-		m:      m,
-		v:      v,
-		log:    log,
-		cfg:    cfg,
-		debugf: logutils.Debug("enabled_linters"),
+		m:   m,
+		v:   v,
+		log: log,
+		cfg: cfg,
 	}
 }
 
@@ -57,7 +51,7 @@ func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []*lint
 	// It should be before --enable and --disable to be able to enable or disable specific linter.
 	if lcfg.Fast {
 		for name := range resultLintersSet {
-			if es.m.GetLinterConfig(name).IsSlowLinter() {
+			if es.m.GetLinterConfig(name).NeedsSSARepr {
 				delete(resultLintersSet, name)
 			}
 		}
@@ -131,7 +125,6 @@ func (es EnabledSet) Get(optimize bool) ([]*linter.Config, error) {
 	if optimize {
 		es.optimizeLintersSet(resultLintersSet)
 	}
-	es.combineGoAnalysisLinters(resultLintersSet)
 
 	var resultLinters []*linter.Config
 	for _, lc := range resultLintersSet {
@@ -139,62 +132,6 @@ func (es EnabledSet) Get(optimize bool) ([]*linter.Config, error) {
 	}
 
 	return resultLinters, nil
-}
-
-func (es EnabledSet) combineGoAnalysisLinters(linters map[string]*linter.Config) {
-	var goanalysisLinters []*goanalysis.Linter
-	goanalysisPresets := map[string]bool{}
-	analyzerToLinterName := map[*analysis.Analyzer]string{}
-	for _, linter := range linters {
-		lnt, ok := linter.Linter.(goanalysis.SupportedLinter)
-		if !ok {
-			continue
-		}
-
-		analyzers := lnt.Analyzers()
-		if len(analyzers) == 0 {
-			continue // e.g. if "unused" is enabled
-		}
-		gl := goanalysis.NewLinter(linter.Name(), "", analyzers, lnt.Cfg())
-		goanalysisLinters = append(goanalysisLinters, gl)
-		for _, p := range linter.InPresets {
-			goanalysisPresets[p] = true
-		}
-		for a, name := range lnt.AnalyzerToLinterNameMapping() {
-			analyzerToLinterName[a] = name
-		}
-	}
-
-	if len(goanalysisLinters) <= 1 {
-		es.debugf("Didn't combine go/analysis linters: got only %d linters", len(goanalysisLinters))
-		return
-	}
-
-	for _, lnt := range goanalysisLinters {
-		delete(linters, lnt.Name())
-	}
-
-	ml := goanalysis.NewMetaLinter(goanalysisLinters, analyzerToLinterName)
-
-	var presets []string
-	for p := range goanalysisPresets {
-		presets = append(presets, p)
-	}
-
-	mlConfig := &linter.Config{
-		Linter:           ml,
-		EnabledByDefault: false,
-		NeedsSSARepr:     false,
-		InPresets:        presets,
-		Speed:            5,
-		AlternativeNames: nil,
-		OriginalURL:      "",
-		ParentLinterName: "",
-	}
-	mlConfig = mlConfig.WithLoadForGoAnalysis()
-
-	linters[ml.Name()] = mlConfig
-	es.debugf("Combined %d go/analysis linters into one metalinter", len(goanalysisLinters))
 }
 
 func (es EnabledSet) verbosePrintLintersStatus(lcs map[string]*linter.Config) {

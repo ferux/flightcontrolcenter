@@ -1,5 +1,6 @@
 export GO111MODULE=on
 export GOFLAGS=-tags=netgo
+export GOBIN=$(PWD)/bin
 
 GO=go
 
@@ -32,9 +33,9 @@ build: build_static
 .PHONY: build_static
 build_static: 
 	@echo ">"Embedding static files...
-	@go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
+	@$(GOBIN)/go-bindata -fs -prefix "assets/swagger" -pkg static -o internal/static/assets.go assets/swagger
 	@echo ">"Building templates
-	@qtc -dir=./internal/templates
+	@$(GOBIN)/qtc -dir=./internal/templates
 
 .PHONY: build_linux
 build_linux: export GOOS=linux
@@ -46,11 +47,16 @@ build_linux: build
 .PHONY: check
 check:
 	@echo ">"Inspecting code...
-	@golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
+	@$(GOBIN)/golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
 
 .PHONY: test
 test:
-	go test -race -timeout 60s ./internal/...
+	go test -timeout 60s ./internal/...
+
+.PHONY: vendor
+vendor:
+	go mod tidy
+	go mod vendor
 
 .PHONY: vendor
 vendor:
@@ -66,11 +72,12 @@ download:
 	$(info downloading modules)
 	@$(GO) mod download
 
-install_tools: download
+install_tools:
 	$(info installing tools)
 	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
 
 proto_gen:
 	protoc -I internal/keeper/talk \
-	--gofast_out=plugins=grps:internal/keeper/talk/ \
+	-I bin/protoc-gen-gofast \
+	--gofast_out=plugins=grpc:internal/keeper/talk/ \
 	internal/keeper/talk/*.proto

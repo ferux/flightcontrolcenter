@@ -406,7 +406,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 	defer cancel()
 
 	if needTrackResources {
-		go watchResources(ctx, trackResourcesEndCh, e.log, e.debugf)
+		go watchResources(ctx, trackResourcesEndCh, e.log)
 	}
 
 	if err := e.runAndPrint(ctx, args); err != nil {
@@ -447,34 +447,24 @@ func (e *Executor) setupExitCode(ctx context.Context) {
 	}
 }
 
-func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log, debugf logutils.DebugFunc) {
+func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log) {
 	startedAt := time.Now()
-	debugf("Started tracking time")
 
-	var maxRSSMB, totalRSSMB float64
-	var iterationsCount int
+	var rssValues []uint64
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	logEveryRecord := os.Getenv("GL_MEM_LOG_EVERY") == "1"
-	const MB = 1024 * 1024
 
 	track := func() {
-		debugf("Starting memory tracing iteration ...")
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 
 		if logEveryRecord {
-			debugf("Stopping memory tracing iteration, printing ...")
 			printMemStats(&m, logger)
 		}
 
-		rssMB := float64(m.Sys) / MB
-		if rssMB > maxRSSMB {
-			maxRSSMB = rssMB
-		}
-		totalRSSMB += rssMB
-		iterationsCount++
+		rssValues = append(rssValues, m.Sys)
 	}
 
 	for {
@@ -484,8 +474,7 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 		select {
 		case <-ctx.Done():
 			stop = true
-			debugf("Stopped resources tracking")
-		case <-ticker.C:
+		case <-ticker.C: // track every second
 		}
 
 		if stop {
@@ -494,10 +483,19 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 	}
 	track()
 
-	avgRSSMB := totalRSSMB / float64(iterationsCount)
+	var avg, max uint64
+	for _, v := range rssValues {
+		avg += v
+		if v > max {
+			max = v
+		}
+	}
+	avg /= uint64(len(rssValues))
 
+	const MB = 1024 * 1024
+	maxMB := float64(max) / MB
 	logger.Infof("Memory: %d samples, avg is %.1fMB, max is %.1fMB",
-		iterationsCount, avgRSSMB, maxRSSMB)
+		len(rssValues), float64(avg)/MB, maxMB)
 	logger.Infof("Execution took %s", time.Since(startedAt))
 	close(done)
 }
