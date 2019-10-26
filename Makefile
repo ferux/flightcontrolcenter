@@ -58,11 +58,6 @@ vendor:
 	go mod tidy
 	go mod vendor
 
-.PHONY: vendor
-vendor:
-	go mod tidy
-	go mod vendor
-
 .PHONY: ssh_deploy
 ssh_deploy: build_linux
 	$(info >Deploying via ssh)
