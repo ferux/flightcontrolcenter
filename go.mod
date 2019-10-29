@@ -9,6 +9,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/golangci/golangci-lint v1.18.0
+	github.com/google/uuid v1.0.0
 	github.com/gorilla/mux v1.7.1
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/matryer/is v1.2.0

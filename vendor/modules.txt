@@ -46,11 +46,13 @@ github.com/gobwas/glob/util/strings
 github.com/gogo/protobuf/protoc-gen-gofast
 github.com/gogo/protobuf/protoc-gen-gogo
 github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/gogoproto
+github.com/gogo/protobuf/types
 github.com/gogo/protobuf/vanity
 github.com/gogo/protobuf/vanity/command
 github.com/gogo/protobuf/protoc-gen-gogo/generator
-github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/plugin/compare
 github.com/gogo/protobuf/plugin/defaultcheck
 github.com/gogo/protobuf/plugin/description
@@ -192,8 +194,8 @@ github.com/mitchellh/go-homedir
 github.com/mitchellh/mapstructure
 # github.com/mwitkow/go-proto-validators v0.2.0
 github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
-github.com/mwitkow/go-proto-validators/plugin
 github.com/mwitkow/go-proto-validators
+github.com/mwitkow/go-proto-validators/plugin
 # github.com/nbutton23/zxcvbn-go v0.0.0-20171102151520-eafdab6b0663
 github.com/nbutton23/zxcvbn-go
 github.com/nbutton23/zxcvbn-go/match
