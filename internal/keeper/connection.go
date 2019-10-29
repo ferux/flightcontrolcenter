@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ferux/flightcontrolcenter/internal/keeper/talk"
 
 	"github.com/gogo/protobuf/proto"
@@ -153,4 +155,28 @@ func (c *Conn) DenyConnection(ctx context.Context, reason string, soft bool) err
 	}
 
 	return c.Close()
+}
+
+func SendDumbMessage(conn io.Writer) error {
+	msg := talk.ClientInfo{
+		DeviceID:   uuid.New().String(),
+		BuildTime:  time.Now(),
+		Revision:   "00000000",
+		Secret:     "everybody-lies",
+		ClientTime: time.Now().UTC(),
+		APIVersion: &talk.Version{
+			Major: 1,
+			Minor: 0,
+			Patch: 0,
+		},
+		DeviceType: talk.ClientInfo_DEVICE_TYPE_PC,
+	}
+
+	data, err := proto.Marshal(&msg)
+	if err != nil {
+		return errors.Wrap(err, "marshaling ClientInfo message")
+	}
+
+	log.Println(len(data))
+	return nil
 }

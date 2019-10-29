@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ferux/flightcontrolcenter/internal/logger"
+
 	"github.com/ferux/yandexmapclient"
 )
 

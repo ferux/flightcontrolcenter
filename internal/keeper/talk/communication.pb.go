@@ -5,16 +5,22 @@ package talk
 
 import (
 	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/gogo/protobuf/types"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/mwitkow/go-proto-validators"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -62,24 +68,24 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 type ClientInfo_DeviceType int32
 
 const (
-	ClientInfo_UNKNOWN ClientInfo_DeviceType = 0
-	ClientInfo_PHONE   ClientInfo_DeviceType = 1
-	ClientInfo_MEDIA   ClientInfo_DeviceType = 2
-	ClientInfo_PC      ClientInfo_DeviceType = 3
+	ClientInfo_DEVICE_TYPE_UNKNOWN ClientInfo_DeviceType = 0
+	ClientInfo_DEVICE_TYPE_PHONE   ClientInfo_DeviceType = 1
+	ClientInfo_DEVICE_TYPE_MEDIA   ClientInfo_DeviceType = 2
+	ClientInfo_DEVICE_TYPE_PC      ClientInfo_DeviceType = 3
 )
 
 var ClientInfo_DeviceType_name = map[int32]string{
-	0: "UNKNOWN",
-	1: "PHONE",
-	2: "MEDIA",
-	3: "PC",
+	0: "DEVICE_TYPE_UNKNOWN",
+	1: "DEVICE_TYPE_PHONE",
+	2: "DEVICE_TYPE_MEDIA",
+	3: "DEVICE_TYPE_PC",
 }
 
 var ClientInfo_DeviceType_value = map[string]int32{
-	"UNKNOWN": 0,
-	"PHONE":   1,
-	"MEDIA":   2,
-	"PC":      3,
+	"DEVICE_TYPE_UNKNOWN": 0,
+	"DEVICE_TYPE_PHONE":   1,
+	"DEVICE_TYPE_MEDIA":   2,
+	"DEVICE_TYPE_PC":      3,
 }
 
 func (x ClientInfo_DeviceType) String() string {
@@ -90,7 +96,7 @@ func (ClientInfo_DeviceType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_b64068f22c460ac1, []int{1, 0}
 }
 
-type APIVersion struct {
+type Version struct {
 	Major                uint64   `protobuf:"varint,1,opt,name=major,proto3" json:"major,omitempty"`
 	Minor                uint64   `protobuf:"varint,2,opt,name=minor,proto3" json:"minor,omitempty"`
 	Patch                uint64   `protobuf:"varint,3,opt,name=patch,proto3" json:"patch,omitempty"`
@@ -100,18 +106,18 @@ type APIVersion struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *APIVersion) Reset()         { *m = APIVersion{} }
-func (m *APIVersion) String() string { return proto.CompactTextString(m) }
-func (*APIVersion) ProtoMessage()    {}
-func (*APIVersion) Descriptor() ([]byte, []int) {
+func (m *Version) Reset()         { *m = Version{} }
+func (m *Version) String() string { return proto.CompactTextString(m) }
+func (*Version) ProtoMessage()    {}
+func (*Version) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b64068f22c460ac1, []int{0}
 }
-func (m *APIVersion) XXX_Unmarshal(b []byte) error {
+func (m *Version) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *APIVersion) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Version) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_APIVersion.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Version.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -121,54 +127,58 @@ func (m *APIVersion) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *APIVersion) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_APIVersion.Merge(m, src)
+func (m *Version) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Version.Merge(m, src)
 }
-func (m *APIVersion) XXX_Size() int {
+func (m *Version) XXX_Size() int {
 	return m.Size()
 }
-func (m *APIVersion) XXX_DiscardUnknown() {
-	xxx_messageInfo_APIVersion.DiscardUnknown(m)
+func (m *Version) XXX_DiscardUnknown() {
+	xxx_messageInfo_Version.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_APIVersion proto.InternalMessageInfo
+var xxx_messageInfo_Version proto.InternalMessageInfo
 
-func (m *APIVersion) GetMajor() uint64 {
+func (m *Version) GetMajor() uint64 {
 	if m != nil {
 		return m.Major
 	}
 	return 0
 }
 
-func (m *APIVersion) GetMinor() uint64 {
+func (m *Version) GetMinor() uint64 {
 	if m != nil {
 		return m.Minor
 	}
 	return 0
 }
 
-func (m *APIVersion) GetPatch() uint64 {
+func (m *Version) GetPatch() uint64 {
 	if m != nil {
 		return m.Patch
 	}
 	return 0
 }
 
-func (m *APIVersion) GetExtension() string {
+func (m *Version) GetExtension() string {
 	if m != nil {
 		return m.Extension
 	}
 	return ""
 }
 
+func (*Version) XXX_MessageName() string {
+	return "talk.Version"
+}
+
 // ClientInfo is a message sent by client to identify itself
 type ClientInfo struct {
-	DeviceId             string                `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	ApiVersion           *APIVersion           `protobuf:"bytes,2,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
-	BuildTime            uint64                `protobuf:"varint,3,opt,name=build_time,json=buildTime,proto3" json:"build_time,omitempty"`
+	DeviceID             string                `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	APIVersion           *Version              `protobuf:"bytes,2,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	BuildTime            time.Time             `protobuf:"bytes,3,opt,name=build_time,json=buildTime,proto3,stdtime" json:"build_time"`
 	Revision             string                `protobuf:"bytes,4,opt,name=revision,proto3" json:"revision,omitempty"`
 	Secret               string                `protobuf:"bytes,5,opt,name=secret,proto3" json:"secret,omitempty"`
-	ClientTime           uint64                `protobuf:"varint,6,opt,name=client_time,json=clientTime,proto3" json:"client_time,omitempty"`
+	ClientTime           time.Time             `protobuf:"bytes,6,opt,name=client_time,json=clientTime,proto3,stdtime" json:"client_time"`
 	DeviceType           ClientInfo_DeviceType `protobuf:"varint,7,opt,name=device_type,json=deviceType,proto3,enum=talk.ClientInfo_DeviceType" json:"device_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -208,25 +218,25 @@ func (m *ClientInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ClientInfo proto.InternalMessageInfo
 
-func (m *ClientInfo) GetDeviceId() string {
+func (m *ClientInfo) GetDeviceID() string {
 	if m != nil {
-		return m.DeviceId
+		return m.DeviceID
 	}
 	return ""
 }
 
-func (m *ClientInfo) GetApiVersion() *APIVersion {
+func (m *ClientInfo) GetAPIVersion() *Version {
 	if m != nil {
-		return m.ApiVersion
+		return m.APIVersion
 	}
 	return nil
 }
 
-func (m *ClientInfo) GetBuildTime() uint64 {
+func (m *ClientInfo) GetBuildTime() time.Time {
 	if m != nil {
 		return m.BuildTime
 	}
-	return 0
+	return time.Time{}
 }
 
 func (m *ClientInfo) GetRevision() string {
@@ -243,18 +253,22 @@ func (m *ClientInfo) GetSecret() string {
 	return ""
 }
 
-func (m *ClientInfo) GetClientTime() uint64 {
+func (m *ClientInfo) GetClientTime() time.Time {
 	if m != nil {
 		return m.ClientTime
 	}
-	return 0
+	return time.Time{}
 }
 
 func (m *ClientInfo) GetDeviceType() ClientInfo_DeviceType {
 	if m != nil {
 		return m.DeviceType
 	}
-	return ClientInfo_UNKNOWN
+	return ClientInfo_DEVICE_TYPE_UNKNOWN
+}
+
+func (*ClientInfo) XXX_MessageName() string {
+	return "talk.ClientInfo"
 }
 
 // Approve incoming `ClientInfo` request
@@ -303,6 +317,10 @@ func (m *Approve) GetServerTime() uint64 {
 		return m.ServerTime
 	}
 	return 0
+}
+
+func (*Approve) XXX_MessageName() string {
+	return "talk.Approve"
 }
 
 // Denied message to tell device service was unable to accept it
@@ -361,6 +379,10 @@ func (m *Denied) GetSoft() bool {
 	return false
 }
 
+func (*Denied) XXX_MessageName() string {
+	return "talk.Denied"
+}
+
 // Inform server that disconnect is planned
 type GracefulGoodbye struct {
 	Reason               string   `protobuf:"bytes,1,opt,name=reason,proto3" json:"reason,omitempty"`
@@ -409,6 +431,10 @@ func (m *GracefulGoodbye) GetReason() string {
 	return ""
 }
 
+func (*GracefulGoodbye) XXX_MessageName() string {
+	return "talk.GracefulGoodbye"
+}
+
 // Ping client (usually issued by server to check client is still here)
 type Ping struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -449,6 +475,10 @@ func (m *Ping) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Ping proto.InternalMessageInfo
 
+func (*Ping) XXX_MessageName() string {
+	return "talk.Ping"
+}
+
 // Pong back to server to show client is still here.
 type Pong struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -488,6 +518,10 @@ func (m *Pong) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Pong proto.InternalMessageInfo
+
+func (*Pong) XXX_MessageName() string {
+	return "talk.Pong"
+}
 
 // MeasureLatencyRequest measures latency between devices
 type MeasureLatencyRequest struct {
@@ -535,6 +569,10 @@ func (m *MeasureLatencyRequest) GetCurrentTime() uint64 {
 		return m.CurrentTime
 	}
 	return 0
+}
+
+func (*MeasureLatencyRequest) XXX_MessageName() string {
+	return "talk.MeasureLatencyRequest"
 }
 
 type MeasureLatencyResponse struct {
@@ -586,10 +624,13 @@ func (m *MeasureLatencyResponse) GetLatency() uint64 {
 	return 0
 }
 
+func (*MeasureLatencyResponse) XXX_MessageName() string {
+	return "talk.MeasureLatencyResponse"
+}
 func init() {
 	proto.RegisterEnum("talk.MessageType", MessageType_name, MessageType_value)
 	proto.RegisterEnum("talk.ClientInfo_DeviceType", ClientInfo_DeviceType_name, ClientInfo_DeviceType_value)
-	proto.RegisterType((*APIVersion)(nil), "talk.APIVersion")
+	proto.RegisterType((*Version)(nil), "talk.Version")
 	proto.RegisterType((*ClientInfo)(nil), "talk.ClientInfo")
 	proto.RegisterType((*Approve)(nil), "talk.Approve")
 	proto.RegisterType((*Denied)(nil), "talk.Denied")
@@ -603,44 +644,54 @@ func init() {
 func init() { proto.RegisterFile("communication.proto", fileDescriptor_b64068f22c460ac1) }
 
 var fileDescriptor_b64068f22c460ac1 = []byte{
-	// 539 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0x86, 0xeb, 0xd4, 0x71, 0xe2, 0x31, 0xa2, 0xd6, 0x02, 0x95, 0x45, 0x21, 0x14, 0x9f, 0x4a,
-	0x0f, 0x91, 0x28, 0x48, 0x48, 0x88, 0x4b, 0x68, 0x42, 0xb0, 0x68, 0x1d, 0xcb, 0x2a, 0x45, 0x9c,
-	0x22, 0xd7, 0x9e, 0x84, 0x05, 0x67, 0xd7, 0xac, 0xd7, 0x11, 0x79, 0x13, 0xde, 0x08, 0x8e, 0x3c,
-	0x02, 0x0a, 0x2f, 0x82, 0xbc, 0xeb, 0x26, 0x08, 0xc1, 0x29, 0xff, 0xff, 0x6f, 0x66, 0xf6, 0x9b,
-	0xb1, 0x0d, 0xb7, 0x52, 0xbe, 0x58, 0x54, 0x8c, 0xa6, 0x89, 0xa4, 0x9c, 0xf5, 0x0b, 0xc1, 0x25,
-	0x27, 0xa6, 0x4c, 0xf2, 0x4f, 0x7e, 0x0e, 0x30, 0x88, 0x82, 0x4b, 0x14, 0x25, 0xe5, 0x8c, 0xdc,
-	0x86, 0xf6, 0x22, 0xf9, 0xc8, 0x85, 0x67, 0x1c, 0x1a, 0x47, 0x66, 0xac, 0x8d, 0x4a, 0x29, 0xe3,
-	0xc2, 0x6b, 0x35, 0x69, 0x6d, 0xea, 0xb4, 0x48, 0x64, 0xfa, 0xc1, 0xdb, 0xd5, 0xa9, 0x32, 0xe4,
-	0x1e, 0xd8, 0xf8, 0x45, 0x22, 0xab, 0xdb, 0x79, 0xe6, 0xa1, 0x71, 0x64, 0xc7, 0xdb, 0xc0, 0xff,
-	0xd6, 0x02, 0x38, 0xcd, 0x29, 0x32, 0x19, 0xb0, 0x19, 0x27, 0x07, 0x60, 0x67, 0xb8, 0xa4, 0x29,
-	0x4e, 0x69, 0xa6, 0xae, 0xb4, 0xe3, 0xae, 0x0e, 0x82, 0x8c, 0x3c, 0x06, 0x27, 0x29, 0xe8, 0x74,
-	0xa9, 0xd1, 0xd4, 0xdd, 0xce, 0x89, 0xdb, 0xaf, 0xa9, 0xfb, 0x5b, 0xe4, 0x18, 0x92, 0x82, 0x5e,
-	0xe3, 0xdf, 0x07, 0xb8, 0xaa, 0x68, 0x9e, 0x4d, 0x25, 0x5d, 0x60, 0xc3, 0x65, 0xab, 0xe4, 0x82,
-	0x2e, 0x90, 0xdc, 0x85, 0xae, 0xc0, 0x25, 0xfd, 0x03, 0x6d, 0xe3, 0xc9, 0x3e, 0x58, 0x25, 0xa6,
-	0x02, 0xa5, 0xd7, 0x56, 0x27, 0x8d, 0x23, 0x0f, 0xc0, 0x49, 0x15, 0xb0, 0xee, 0x69, 0xa9, 0x9e,
-	0xa0, 0x23, 0xd5, 0xf4, 0x05, 0x38, 0xcd, 0x0c, 0x72, 0x55, 0xa0, 0xd7, 0x39, 0x34, 0x8e, 0x6e,
-	0x9e, 0x1c, 0x68, 0xcc, 0xed, 0xa8, 0xfd, 0xa1, 0xfa, 0xcf, 0xc5, 0xaa, 0xc0, 0x18, 0xb2, 0x8d,
-	0xf6, 0x9f, 0x01, 0x6c, 0x4f, 0x88, 0x03, 0x9d, 0xb7, 0xe1, 0x9b, 0x70, 0xf2, 0x2e, 0x74, 0x77,
-	0x88, 0x0d, 0xed, 0xe8, 0xf5, 0x24, 0x1c, 0xb9, 0x46, 0x2d, 0xcf, 0x47, 0xc3, 0x60, 0xe0, 0xb6,
-	0x88, 0x05, 0xad, 0xe8, 0xd4, 0xdd, 0xf5, 0x8f, 0xa1, 0x33, 0x28, 0x0a, 0xc1, 0x97, 0x58, 0x23,
-	0x96, 0x28, 0x96, 0x28, 0x34, 0xa2, 0x7e, 0x48, 0xa0, 0xa3, 0x1a, 0xd1, 0x7f, 0x0a, 0xd6, 0x10,
-	0x19, 0xc5, 0xac, 0x9e, 0x52, 0x60, 0x52, 0x72, 0xd6, 0x6c, 0xbb, 0x71, 0x84, 0x80, 0x59, 0xf2,
-	0x99, 0x54, 0xb5, 0xdd, 0x58, 0x69, 0xff, 0x11, 0xec, 0x8d, 0x45, 0x92, 0xe2, 0xac, 0xca, 0xc7,
-	0x9c, 0x67, 0x57, 0x2b, 0xfc, 0x5f, 0xb9, 0x6f, 0x81, 0x19, 0x51, 0x36, 0x57, 0xbf, 0x9c, 0xcd,
-	0xfd, 0xe7, 0x70, 0xe7, 0x1c, 0x93, 0xb2, 0x12, 0x78, 0x96, 0x48, 0x64, 0xe9, 0x2a, 0xc6, 0xcf,
-	0x15, 0x96, 0x92, 0x3c, 0x84, 0x1b, 0x69, 0x25, 0xc4, 0x66, 0x9d, 0xfa, 0x35, 0x73, 0x9a, 0x4c,
-	0xc1, 0x9e, 0xc0, 0xfe, 0xdf, 0xb5, 0x65, 0xc1, 0x59, 0x89, 0xc4, 0x83, 0x4e, 0xae, 0xa3, 0xa6,
-	0xee, 0xda, 0x1e, 0x5f, 0x82, 0x73, 0x8e, 0x65, 0x99, 0xcc, 0xff, 0xb1, 0x46, 0x07, 0x3a, 0x83,
-	0x28, 0x8a, 0x27, 0x97, 0xf5, 0x22, 0xbb, 0x60, 0x0e, 0x47, 0xe1, 0x7b, 0xb7, 0x55, 0xab, 0x28,
-	0x08, 0xc7, 0xee, 0xae, 0x52, 0x93, 0x70, 0xec, 0x9a, 0x64, 0x0f, 0x9c, 0xd3, 0xb3, 0x60, 0x14,
-	0x5e, 0x4c, 0x83, 0xf0, 0xd5, 0xc4, 0x6d, 0xbf, 0x74, 0xbf, 0xaf, 0x7b, 0xc6, 0x8f, 0x75, 0xcf,
-	0xf8, 0xb9, 0xee, 0x19, 0x5f, 0x7f, 0xf5, 0x76, 0xae, 0x2c, 0xf5, 0xed, 0x3c, 0xf9, 0x1d, 0x00,
-	0x00, 0xff, 0xff, 0x57, 0x7d, 0x64, 0x70, 0x52, 0x03, 0x00, 0x00,
+	// 700 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x4d, 0x6f, 0xda, 0x4a,
+	0x14, 0x8d, 0x81, 0xf0, 0x71, 0xfd, 0x5e, 0xe2, 0x37, 0x51, 0xf2, 0x2c, 0x5e, 0x04, 0x3c, 0xaf,
+	0xd2, 0x48, 0x31, 0x12, 0xad, 0xba, 0xa8, 0xaa, 0x4a, 0x7c, 0xb8, 0xd4, 0x6a, 0x62, 0x90, 0x45,
+	0xa9, 0xb2, 0x42, 0xc6, 0x1e, 0x9c, 0x69, 0xc0, 0xe3, 0xda, 0x63, 0x52, 0x96, 0xfd, 0x07, 0x5d,
+	0xf6, 0xe7, 0x74, 0x99, 0x65, 0x7f, 0x41, 0x52, 0x91, 0xfe, 0x90, 0xca, 0x63, 0x03, 0x49, 0xa4,
+	0x2e, 0xba, 0xe2, 0xde, 0x73, 0xe6, 0x70, 0xe7, 0x9c, 0x3b, 0x86, 0x3d, 0x9b, 0xce, 0x66, 0x91,
+	0x47, 0x6c, 0x8b, 0x11, 0xea, 0xa9, 0x7e, 0x40, 0x19, 0x45, 0x39, 0x66, 0x4d, 0x2f, 0xcb, 0x55,
+	0x97, 0x52, 0x77, 0x8a, 0xeb, 0x1c, 0x1b, 0x47, 0x93, 0x3a, 0x23, 0x33, 0x1c, 0x32, 0x6b, 0xe6,
+	0x27, 0xc7, 0xca, 0xcf, 0x5d, 0xc2, 0x2e, 0xa2, 0xb1, 0x6a, 0xd3, 0x59, 0x7d, 0x76, 0x45, 0xd8,
+	0x25, 0xbd, 0xaa, 0xbb, 0xf4, 0x84, 0x93, 0x27, 0x73, 0x6b, 0x4a, 0x1c, 0x8b, 0xd1, 0x20, 0xac,
+	0xaf, 0xcb, 0x54, 0x77, 0x72, 0x4f, 0xe7, 0x52, 0x97, 0x6e, 0x26, 0xc4, 0x1d, 0x6f, 0x78, 0x95,
+	0x1c, 0x57, 0x3e, 0x0b, 0x50, 0x18, 0xe2, 0x20, 0x24, 0xd4, 0x43, 0x87, 0xb0, 0x3d, 0xb3, 0x3e,
+	0xd0, 0x40, 0x16, 0x6a, 0xc2, 0x51, 0xae, 0x95, 0x5f, 0xde, 0x56, 0x33, 0x35, 0xc1, 0x4c, 0x40,
+	0xce, 0x12, 0x8f, 0x06, 0x72, 0xe6, 0x11, 0x1b, 0x83, 0x31, 0xeb, 0x5b, 0xcc, 0xbe, 0x90, 0xb3,
+	0x0f, 0x59, 0x0e, 0xa2, 0x43, 0x28, 0xe1, 0x4f, 0x0c, 0x7b, 0xf1, 0x18, 0x39, 0x57, 0x13, 0x8e,
+	0x4a, 0xe6, 0x06, 0x50, 0x7e, 0x66, 0x01, 0xda, 0x53, 0x82, 0x3d, 0xa6, 0x7b, 0x13, 0x8a, 0xea,
+	0x50, 0x72, 0xf0, 0x9c, 0xd8, 0x78, 0x44, 0x1c, 0x7e, 0x95, 0x52, 0x0b, 0x2d, 0x6f, 0xaa, 0xc5,
+	0x0e, 0x07, 0xf5, 0x4e, 0xfa, 0xd7, 0xc5, 0xe4, 0x90, 0xee, 0xa0, 0x57, 0x20, 0x5a, 0x3e, 0x19,
+	0xcd, 0x13, 0x1b, 0xfc, 0x7e, 0x62, 0xe3, 0x6f, 0x35, 0xce, 0x59, 0x4d, 0xbd, 0xb5, 0x76, 0x96,
+	0x37, 0x55, 0x68, 0xf6, 0xf5, 0xb4, 0x37, 0xc1, 0xf2, 0xc9, 0xca, 0x77, 0x1b, 0x60, 0x1c, 0x91,
+	0xa9, 0x33, 0x8a, 0x77, 0xc0, 0x0d, 0x88, 0x8d, 0xb2, 0x9a, 0x2c, 0x48, 0x5d, 0xc5, 0xa7, 0x0e,
+	0x56, 0x0b, 0x6a, 0x15, 0xaf, 0x6f, 0xaa, 0x5b, 0x5f, 0x6e, 0xab, 0x82, 0x59, 0xe2, 0xba, 0x98,
+	0x41, 0x65, 0x28, 0x06, 0x78, 0x4e, 0xee, 0x39, 0x5c, 0xf7, 0xe8, 0x00, 0xf2, 0x21, 0xb6, 0x03,
+	0xcc, 0xe4, 0x6d, 0xce, 0xa4, 0x1d, 0xd2, 0x40, 0xb4, 0xb9, 0xef, 0x64, 0x72, 0xfe, 0x0f, 0x26,
+	0x43, 0x22, 0xe4, 0xa3, 0x5f, 0x82, 0x98, 0x06, 0xc6, 0x16, 0x3e, 0x96, 0x0b, 0x35, 0xe1, 0x68,
+	0xa7, 0xf1, 0x5f, 0xe2, 0x7f, 0x93, 0xab, 0x9a, 0xe4, 0x37, 0x58, 0xf8, 0xd8, 0x04, 0x67, 0x5d,
+	0x2b, 0x2e, 0xc0, 0x86, 0x41, 0xff, 0xc2, 0x5e, 0x47, 0x1b, 0xea, 0x6d, 0x6d, 0x34, 0x38, 0xef,
+	0x6b, 0xa3, 0x77, 0xc6, 0x5b, 0xa3, 0xf7, 0xde, 0x90, 0xb6, 0xd0, 0x3e, 0xfc, 0x73, 0x9f, 0xe8,
+	0xbf, 0xe9, 0x19, 0x9a, 0x24, 0x3c, 0x86, 0xcf, 0xb4, 0x8e, 0xde, 0x94, 0x32, 0x08, 0xc1, 0xce,
+	0x83, 0xd3, 0x6d, 0x29, 0xab, 0x1c, 0x43, 0xa1, 0xe9, 0xfb, 0x01, 0x9d, 0x63, 0x54, 0x05, 0x31,
+	0xc4, 0xc1, 0x1c, 0x07, 0x89, 0x71, 0xfe, 0xa2, 0x4c, 0x48, 0xa0, 0xd8, 0x92, 0xf2, 0x0c, 0xf2,
+	0x1d, 0xec, 0x11, 0xec, 0xc4, 0xd9, 0x05, 0xd8, 0x0a, 0xa9, 0x97, 0x3c, 0x05, 0x33, 0xed, 0x10,
+	0x82, 0x5c, 0x48, 0x27, 0x8c, 0x6b, 0x8b, 0x26, 0xaf, 0x95, 0x27, 0xb0, 0xdb, 0x0d, 0x2c, 0x1b,
+	0x4f, 0xa2, 0x69, 0x97, 0x52, 0x67, 0xbc, 0xc0, 0xbf, 0x93, 0x2b, 0x79, 0xc8, 0xf5, 0x89, 0xe7,
+	0xf2, 0x5f, 0xea, 0xb9, 0xca, 0x0b, 0xd8, 0x3f, 0xc3, 0x56, 0x18, 0x05, 0xf8, 0xd4, 0x62, 0xd8,
+	0xb3, 0x17, 0x26, 0xfe, 0x18, 0xe1, 0x90, 0xa1, 0xff, 0xe1, 0x2f, 0x3b, 0x0a, 0x82, 0xf5, 0x92,
+	0xf8, 0xb7, 0x61, 0x8a, 0x29, 0xc6, 0x2f, 0xdb, 0x80, 0x83, 0xc7, 0xda, 0xd0, 0xa7, 0x5e, 0x88,
+	0x91, 0x0c, 0x85, 0x69, 0x02, 0xa5, 0xba, 0x55, 0x7b, 0x3c, 0x04, 0xf1, 0x0c, 0x87, 0xa1, 0xe5,
+	0x26, 0xb1, 0x8b, 0x50, 0xd8, 0x44, 0x2d, 0x42, 0xa1, 0xd9, 0xef, 0x9b, 0xbd, 0x61, 0x1c, 0x70,
+	0x11, 0x72, 0x1d, 0xcd, 0x38, 0x97, 0x32, 0x71, 0xd5, 0xd7, 0x8d, 0xae, 0x94, 0xe5, 0x55, 0xcf,
+	0xe8, 0x4a, 0x39, 0xb4, 0x0b, 0x62, 0xfb, 0x54, 0xd7, 0x8c, 0xc1, 0x48, 0x37, 0x5e, 0xf7, 0xa4,
+	0xed, 0x96, 0x7c, 0xbd, 0xac, 0x08, 0xdf, 0x97, 0x15, 0xe1, 0xc7, 0xb2, 0x22, 0x7c, 0xbd, 0xab,
+	0x6c, 0x7d, 0xbb, 0xab, 0x08, 0xd7, 0x77, 0x15, 0x61, 0x9c, 0xe7, 0xef, 0xe9, 0xe9, 0xaf, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0xba, 0x34, 0x20, 0x5e, 0x95, 0x04, 0x00, 0x00,
 }
 
-func (m *APIVersion) Marshal() (dAtA []byte, err error) {
+func (m *Version) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -650,12 +701,12 @@ func (m *APIVersion) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *APIVersion) MarshalTo(dAtA []byte) (int, error) {
+func (m *Version) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *APIVersion) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Version) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -718,11 +769,14 @@ func (m *ClientInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x38
 	}
-	if m.ClientTime != 0 {
-		i = encodeVarintCommunication(dAtA, i, uint64(m.ClientTime))
-		i--
-		dAtA[i] = 0x30
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ClientTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ClientTime):])
+	if err1 != nil {
+		return 0, err1
 	}
+	i -= n1
+	i = encodeVarintCommunication(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x32
 	if len(m.Secret) > 0 {
 		i -= len(m.Secret)
 		copy(dAtA[i:], m.Secret)
@@ -737,14 +791,17 @@ func (m *ClientInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.BuildTime != 0 {
-		i = encodeVarintCommunication(dAtA, i, uint64(m.BuildTime))
-		i--
-		dAtA[i] = 0x18
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.BuildTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.BuildTime):])
+	if err2 != nil {
+		return 0, err2
 	}
-	if m.ApiVersion != nil {
+	i -= n2
+	i = encodeVarintCommunication(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x1a
+	if m.APIVersion != nil {
 		{
-			size, err := m.ApiVersion.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.APIVersion.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -754,10 +811,10 @@ func (m *ClientInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.DeviceId) > 0 {
-		i -= len(m.DeviceId)
-		copy(dAtA[i:], m.DeviceId)
-		i = encodeVarintCommunication(dAtA, i, uint64(len(m.DeviceId)))
+	if len(m.DeviceID) > 0 {
+		i -= len(m.DeviceID)
+		copy(dAtA[i:], m.DeviceID)
+		i = encodeVarintCommunication(dAtA, i, uint64(len(m.DeviceID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1003,7 +1060,7 @@ func encodeVarintCommunication(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *APIVersion) Size() (n int) {
+func (m *Version) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1034,17 +1091,16 @@ func (m *ClientInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.DeviceId)
+	l = len(m.DeviceID)
 	if l > 0 {
 		n += 1 + l + sovCommunication(uint64(l))
 	}
-	if m.ApiVersion != nil {
-		l = m.ApiVersion.Size()
+	if m.APIVersion != nil {
+		l = m.APIVersion.Size()
 		n += 1 + l + sovCommunication(uint64(l))
 	}
-	if m.BuildTime != 0 {
-		n += 1 + sovCommunication(uint64(m.BuildTime))
-	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.BuildTime)
+	n += 1 + l + sovCommunication(uint64(l))
 	l = len(m.Revision)
 	if l > 0 {
 		n += 1 + l + sovCommunication(uint64(l))
@@ -1053,9 +1109,8 @@ func (m *ClientInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCommunication(uint64(l))
 	}
-	if m.ClientTime != 0 {
-		n += 1 + sovCommunication(uint64(m.ClientTime))
-	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ClientTime)
+	n += 1 + l + sovCommunication(uint64(l))
 	if m.DeviceType != 0 {
 		n += 1 + sovCommunication(uint64(m.DeviceType))
 	}
@@ -1175,7 +1230,7 @@ func sovCommunication(x uint64) (n int) {
 func sozCommunication(x uint64) (n int) {
 	return sovCommunication(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *APIVersion) Unmarshal(dAtA []byte) error {
+func (m *Version) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1198,10 +1253,10 @@ func (m *APIVersion) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: APIVersion: wiretype end group for non-group")
+			return fmt.Errorf("proto: Version: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: APIVersion: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Version: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1349,7 +1404,7 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeviceId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1377,11 +1432,11 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DeviceId = string(dAtA[iNdEx:postIndex])
+			m.DeviceID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiVersion", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field APIVersion", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1408,18 +1463,18 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ApiVersion == nil {
-				m.ApiVersion = &APIVersion{}
+			if m.APIVersion == nil {
+				m.APIVersion = &Version{}
 			}
-			if err := m.ApiVersion.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.APIVersion.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BuildTime", wireType)
 			}
-			m.BuildTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCommunication
@@ -1429,11 +1484,25 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.BuildTime |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthCommunication
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCommunication
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.BuildTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Revision", wireType)
@@ -1499,10 +1568,10 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 			m.Secret = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 6:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ClientTime", wireType)
 			}
-			m.ClientTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCommunication
@@ -1512,11 +1581,25 @@ func (m *ClientInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ClientTime |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthCommunication
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCommunication
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ClientTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeviceType", wireType)

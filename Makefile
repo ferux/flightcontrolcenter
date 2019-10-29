@@ -71,8 +71,19 @@ install_tools:
 	$(info installing tools)
 	@cat tools.go | grep _ | sed -e 's/.*_ "//g' | sed -e 's/"//g' | xargs -tI % go install %
 
+proto_gen: export PATH := ${PATH}:${PWD}/bin
 proto_gen:
-	protoc -I internal/keeper/talk \
-	-I bin/protoc-gen-gofast \
-	--gofast_out=plugins=grpc:internal/keeper/talk/ \
+	protoc \
+	-I internal/keeper/talk \
+	-I ${GOPATH}/src \
+	-I vendor/github.com/gogo/protobuf/proto/ \
+	-I vendor/github.com/gogo/protobuf/plugin/ \
+	-I vendor/github.com/mwitkow/go-proto-validators/ \
+	-I vendor/ \
+	--gofast_out=plugins=grpc\
+	,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types\
+	:internal/keeper/talk/ \
+	--govalidators_out=gogoimport=true\
+	,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types\
+	:internal/keeper/talk/ \
 	internal/keeper/talk/*.proto
