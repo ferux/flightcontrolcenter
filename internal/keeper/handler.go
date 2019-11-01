@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type KeeperError string
+type Error string
 
-func (err KeeperError) Error() string { return string(err) }
+func (err Error) Error() string { return string(err) }
 
 const currentAPIVersion uint64 = 1
 
@@ -26,13 +26,13 @@ func handleClientInfo(ctx context.Context, data []byte, conn *Conn) error {
 		return errors.Wrap(err, "unable to unmarshal ClientInfo message")
 	}
 
-	if len(msg.DeviceId) == 0 {
+	if len(msg.DeviceID) == 0 {
 		// device is new
 		log.Println("new device, hooray!")
 		return nil
 	}
 
-	if msg.ApiVersion.Major < currentAPIVersion {
+	if msg.APIVersion.GetMajor() < currentAPIVersion {
 		// we should deny connection
 		return conn.DenyConnection(ctx, "version not supported", false)
 	}

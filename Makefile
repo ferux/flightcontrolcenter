@@ -1,5 +1,5 @@
 export GO111MODULE=on
-export GOFLAGS=-tags=netgo
+export GOFLAGS=-tags=netgo -mod=vendor
 export GOBIN=$(PWD)/bin
 
 GO=go
@@ -28,7 +28,7 @@ run: build
 .PHONY: build
 build: build_static
 	@echo ">"Building...
-	@$(GO) build -mod=vendor -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
+	@$(GO) build -ldflags '-X main.revision=$(REVISION) -X main.branch=$(BRANCH) -X main.env=$(ENV)' -o $(OUT) ./internal/cmd/main.go
 
 .PHONY: build_static
 build_static: 
@@ -87,3 +87,13 @@ proto_gen:
 	,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types\
 	:internal/keeper/talk/ \
 	internal/keeper/talk/*.proto
+
+DOCKER_IMAGE?=fcc
+DOCKER_FLAGS?=--rm -v "$$PWD":/go/src/github.com/ferux/flightcontrolcenter -w /go/src/github.com/ferux/flightcontrolcenter 
+
+# assume image is ffc
+build_docker:
+	docker run $(DOCKER_FLAGS) $(DOCKER_IMAGE) make install_tools proto_gen check test build
+
+make_image:
+	docker build -t $(DOCKER_IMAGE) .
