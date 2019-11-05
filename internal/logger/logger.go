@@ -5,38 +5,26 @@ import (
 	"os"
 )
 
-// Logger of the service.
-type Logger interface {
-	Debug(msg string)
-	Debugf(format string, args ...interface{})
-
-	Info(msg string)
-	Infof(format string, args ...interface{})
-
-	Err(msg string)
-	Errf(format string, args ...interface{})
+// Logger implements logger for yandex client.
+type Logger struct {
+	debu *log.Logger
+	info *log.Logger
+	erro *log.Logger
 }
-
-type logger struct{}
 
 func New() Logger {
-	return logger{}
+	return Logger{
+		debu: log.New(os.Stdout, "[DEBU] ", log.Lmicroseconds),
+		info: log.New(os.Stdout, "[INFO] ", log.Lmicroseconds),
+		erro: log.New(os.Stdout, "[ERRO] ", log.Lmicroseconds),
+	}
 }
 
-// nolint:gochecknoglobals
-var dlogger = log.New(os.Stdout, "[DEBU] ", log.Lmicroseconds)
+func (l Logger) Debug(msg string)                          { l.debu.Print(msg) }
+func (l Logger) Debugf(format string, args ...interface{}) { l.debu.Printf(format, args...) }
 
-// nolint:gochecknoglobals
-var ilogger = log.New(os.Stdout, "[INFO] ", log.Lmicroseconds)
+func (l Logger) Info(msg string)                          { l.info.Print(msg) }
+func (l Logger) Infof(format string, args ...interface{}) { l.info.Printf(format, args...) }
 
-// nolint:gochecknoglobals
-var elogger = log.New(os.Stderr, "[ERRO] ", log.Lmicroseconds)
-
-func (logger) Debug(msg string)                          { dlogger.Print(msg) }
-func (logger) Debugf(format string, args ...interface{}) { dlogger.Printf(format, args...) }
-
-func (logger) Info(msg string)                          { ilogger.Print(msg) }
-func (logger) Infof(format string, args ...interface{}) { ilogger.Printf(format, args...) }
-
-func (logger) Err(msg string)                          { elogger.Print(msg) }
-func (logger) Errf(format string, args ...interface{}) { elogger.Printf(format, args...) }
+func (l Logger) Err(msg string)                          { l.erro.Print(msg) }
+func (l Logger) Errf(format string, args ...interface{}) { l.erro.Printf(format, args...) }

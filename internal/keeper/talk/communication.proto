@@ -40,7 +40,10 @@ message Version {
 // ClientInfo is a message sent by client to identify itself
 message ClientInfo {
   string device_id = 1 [
-    (validator.field) = {msg_exists : true},
+    (validator.field) = {
+      msg_exists : true,
+      string_not_empty : true,
+    },
     (gogoproto.customname) = "DeviceID"
   ]; // unique id that has been generated on first run
   Version api_version = 2
@@ -55,6 +58,7 @@ message ClientInfo {
     (gogoproto.nullable) = false
   ];                          // just to test timestamp
   DeviceType device_type = 7; // type of the device
+  string MAC = 8;
 
   enum DeviceType {
     DEVICE_TYPE_UNKNOWN = 0;

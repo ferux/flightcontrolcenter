@@ -2,39 +2,27 @@ package keeper
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/ferux/flightcontrolcenter/internal/keeper/talk"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 )
 
-type Error string
-
-func (err Error) Error() string { return string(err) }
-
-const currentAPIVersion uint64 = 1
-
 // handler serves incoming message
-type handler func(context.Context, []byte, *Conn) error
+type handler func(ctx context.Context, msgData []byte, conn *Conn) error
 
-func handleClientInfo(ctx context.Context, data []byte, conn *Conn) error {
-	var msg = talk.ClientInfo{}
-	err := proto.Unmarshal(data, &msg)
+func handlePong(_ context.Context, msgData []byte, conn *Conn) (err error) {
+	var msg talk.Pong
+
+	err = proto.Unmarshal(msgData, &msg)
 	if err != nil {
-		return errors.Wrap(err, "unable to unmarshal ClientInfo message")
+		return fmt.Errorf("unmarshalling data: %w", err)
 	}
 
-	if len(msg.DeviceID) == 0 {
-		// device is new
-		log.Println("new device, hooray!")
-		return nil
-	}
-
-	if msg.APIVersion.GetMajor() < currentAPIVersion {
-		// we should deny connection
-		return conn.DenyConnection(ctx, "version not supported", false)
+	err = conn.extendConnectionLife()
+	if err != nil {
+		return fmt.Errorf("extending connection life: %w", err)
 	}
 
 	return nil

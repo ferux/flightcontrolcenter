@@ -26,6 +26,9 @@ func (this *Version) Validate() error {
 	return nil
 }
 func (this *ClientInfo) Validate() error {
+	if this.DeviceID == "" {
+		return github_com_mwitkow_go_proto_validators.FieldError("DeviceID", fmt.Errorf(`value '%v' must not be an empty string`, this.DeviceID))
+	}
 	if this.APIVersion != nil {
 		if err := github_com_mwitkow_go_proto_validators.CallValidatorIfExists(this.APIVersion); err != nil {
 			return github_com_mwitkow_go_proto_validators.FieldError("APIVersion", err)
