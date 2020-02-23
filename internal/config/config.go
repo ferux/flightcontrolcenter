@@ -13,6 +13,7 @@ type Application struct {
 	HTTP           HTTP           `json:"http"`
 	SentryDSN      string         `json:"sentry_dsn"`
 	NotifyTelegram NotifyTelegram `json:"notify_telegram"`
+	ServerName     string         `json:"server_name"`
 }
 
 type HTTP struct {

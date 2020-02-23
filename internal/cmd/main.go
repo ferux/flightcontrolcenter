@@ -28,12 +28,12 @@ var (
 )
 
 func main() {
+	logger := zerolog.New(os.Stdout)
 	path := flag.String("config", "./config.json", "path to config")
 	showRevision := flag.Bool("revision", false, "show version of the application")
 
 	flag.Parse()
 
-	logger := zerolog.New(os.Stdout)
 	cfg, err := config.Parse(*path)
 	if err != nil {
 		logger.
@@ -77,7 +77,12 @@ func main() {
 		logger.Fatal().Err(err).Msg("can't create sentry client")
 	}
 
-	tgclient := telegram.New()
+	var tgclient telegram.Client = telegram.Mock{}
+
+	if cfg.NotifyTelegram != (config.NotifyTelegram{}) {
+		tgclient = telegram.New()
+	}
+
 	var appInfo = model.ApplicationInfo{
 		Branch:      branch,
 		Revision:    revision,
@@ -115,6 +120,7 @@ func main() {
 
 func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api, chatID string) error {
 	var message = strings.Builder{}
+
 	message.Grow(64)
 	message.WriteString("fcc branch=")
 	message.WriteString(branch)
@@ -122,18 +128,21 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 	message.WriteString(env)
 	message.WriteString(" revision=")
 	message.WriteString(revision)
+
 	return tgclient.SendMessageViaHTTP(ctx, api, chatID, message.String())
 }
 
 func deviceStateNotify(tgclient telegram.Client, api, chatID string) ping.NotifyDeviceStateChanged {
 	return func(d ping.Device) {
 		var message = strings.Builder{}
+
 		message.Grow(128)
 		message.WriteString(d.Name)
 		message.WriteString(" [")
 		message.WriteString(d.Type)
 		message.WriteString("] @ ")
 		message.WriteString(d.IP)
+
 		if d.IsOnline {
 			message.WriteString(" is online now")
 		} else {
