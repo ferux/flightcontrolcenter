@@ -11,12 +11,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type notifyTelegram struct {
-	APIKey  string
-	ChatID  string
-	Message string
-}
-
 type notifyTelegramHandler struct {
 	client telegram.Client
 }
@@ -35,11 +29,6 @@ func (h notifyTelegramHandler) handle(ctx context.Context, data []byte, _ *gob.E
 	}
 
 	return nil
-}
-
-type logMessage struct {
-	Text     string
-	Severity logSeverity
 }
 
 type logMessageHandler struct{}
@@ -67,17 +56,11 @@ const (
 	LogSeverityErro
 )
 
-type ok struct{}
-
 type okHandler struct{}
 
 func (h okHandler) handle(_ context.Context, _ []byte, _ *gob.Encoder) (err error) {
 	// do nothing
 	return nil
-}
-
-type failure struct {
-	Reason string
 }
 
 type failureHandler struct{}
