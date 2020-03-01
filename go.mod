@@ -10,6 +10,7 @@ require (
 	github.com/golang/mock v1.1.1 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/golangci/golangci-lint v1.18.0
+	github.com/google/uuid v1.0.0
 	github.com/gorilla/mux v1.7.1
 	github.com/matryer/is v1.2.0
 	github.com/mwitkow/go-proto-validators v0.2.0

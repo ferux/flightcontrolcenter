@@ -1,4 +1,4 @@
-package api
+package fcchttp
 
 import (
 	"context"
@@ -37,7 +37,7 @@ type HTTP struct {
 
 // NewHTTP prepares new http service
 func NewHTTP(
-	cfg config.Application,
+	cfg config.HTTP,
 	yaclient yandex.Client,
 	tgclient telegram.Client,
 	dstore ping.Store,
@@ -45,9 +45,9 @@ func NewHTTP(
 	nClient *sentry.Client,
 	appInfo model.ApplicationInfo,
 ) (*HTTP, error) {
-	to := cfg.HTTP.Timeout.Std()
+	to := cfg.Timeout.Std()
 	srv := &http.Server{
-		Addr:              cfg.HTTP.Listen,
+		Addr:              cfg.Listen,
 		ReadTimeout:       to,
 		ReadHeaderTimeout: to,
 		WriteTimeout:      to,

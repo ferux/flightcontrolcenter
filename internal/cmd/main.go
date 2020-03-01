@@ -9,7 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter/internal/api"
+	"github.com/ferux/flightcontrolcenter/internal/api/fccgob"
+	"github.com/ferux/flightcontrolcenter/internal/api/fcchttp"
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/ping"
@@ -28,6 +29,9 @@ var (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	logger := zerolog.New(os.Stdout)
 	path := flag.String("config", "./config.json", "path to config")
 	showRevision := flag.Bool("revision", false, "show version of the application")
@@ -92,11 +96,33 @@ func main() {
 	dstore := ping.New(notifierClient)
 	dstore.Subscribe(deviceStateNotify(tgclient, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID))
 
-	api, _ := api.NewHTTP(cfg, yaclient, tgclient, dstore, logger, notifierClient, appInfo)
-	api.Serve()
+	go func() {
+		if cfg.GOBAPI == nil {
+			logger.Info().Str("reason", "no settings").Msg("not starting gob api")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
+			return
+		}
+
+		logger.Info().Str("listen", cfg.GOBAPI.Listen).Msg("running gob api")
+
+		handlers := fccgob.PrepareHandlers(tgclient)
+
+		errGOB := fccgob.Serve(ctx, *cfg.GOBAPI, logger, handlers)
+		if errGOB != nil {
+			logger.Error().Err(errGOB).Msg("unable to start gob")
+		}
+	}()
+
+	if cfg.HTTP != nil {
+		httpapi, err := fcchttp.NewHTTP(*cfg.HTTP, yaclient, tgclient, dstore, logger, notifierClient, appInfo)
+		if err != nil {
+			logger.Error().Err(err).Msg("running http client")
+		}
+
+		httpapi.Serve()
+	} else {
+		logger.Info().Str("reason", "no settings").Msg("not starting http api")
+	}
 
 	go func(ctx context.Context, tgclient telegram.Client, api, chatID string, logger zerolog.Logger) {
 		if err := sendNotificationMessage(ctx, tgclient, api, chatID); err != nil {
@@ -107,14 +133,11 @@ func main() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGQUIT)
 	<-s
+	cancel()
 
 	errNotify := tgclient.SendMessageViaHTTP(ctx, cfg.NotifyTelegram.API, cfg.NotifyTelegram.ChatID, "shutting down")
 	if errNotify != nil {
 		logger.Error().Err(errNotify).Msg("error notifying via tg")
-	}
-
-	if errShut := api.Shutdown(ctx); errShut != nil {
-		logger.Error().Err(errShut).Msg("error shutting down server")
 	}
 }
 
