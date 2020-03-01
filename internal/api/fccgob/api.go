@@ -13,45 +13,10 @@ import (
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
-	"github.com/google/uuid"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
-
-// MessageKind describes type of message encoded into body.
-type MessageKind uint8
-
-const (
-	MessageKindUnknown = iota
-	MessageKindLog
-	MessageKindNotify
-	MessageKindOK
-	MessageKindFail
-)
-
-func (k MessageKind) String() string {
-	switch k {
-	case MessageKindUnknown:
-		return "kind_unknown"
-	case MessageKindLog:
-		return "kind_log"
-	case MessageKindNotify:
-		return "kind_notify"
-	case MessageKindOK:
-		return "kind_ok"
-	case MessageKindFail:
-		return "kind_fail"
-	default:
-		return "undefind"
-	}
-}
-
-// Message is transffered over the wire packet.
-type Message struct {
-	RequestID string
-	Kind      MessageKind
-	Data      []byte
-}
 
 // Serve starts to listen incoming connections.
 func Serve(ctx context.Context, cfg config.GOB, logger zerolog.Logger, h map[MessageKind]Handler) (err error) {
