@@ -16,6 +16,8 @@ type Store interface {
 	GetDevices() []Device
 	GetDevice(id string) (Device, bool)
 	UpsertDevice(d Device)
+	PingDevice(id string)
+	MarkOffline(id string)
 }
 
 type NotifyDeviceStateChanged func(d Device)
@@ -141,6 +143,39 @@ func (c *store) Ping(m Message) {
 	}
 
 	c.UpsertDevice(device)
+}
+
+// PingDevice pings a single device with known parameters.
+func (c *store) PingDevice(id string) {
+	device, ok := c.getDevice(id)
+	if !ok {
+		return
+	}
+
+	now := time.Now()
+	device.PingedAt = now
+	if !device.IsOnline {
+		device.IsOnline = true
+		device.UpdatedAt = now
+		c.notify(device)
+	}
+	c.setDevice(device)
+}
+
+// MarskOffline specific device.
+func (c *store) MarkOffline(id string) {
+	device, ok := c.getDevice(id)
+	if !ok {
+		return
+	}
+
+	now := time.Now()
+	if device.IsOnline {
+		device.IsOnline = false
+		device.UpdatedAt = now
+		c.notify(device)
+	}
+	c.setDevice(device)
 }
 
 // GetDevices gets all stored devices

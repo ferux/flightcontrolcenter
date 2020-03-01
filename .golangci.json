@@ -8,6 +8,6 @@
   },
   "linters": {
     "enable-all": true,
-    "disable": ["lll", "gochecknoglobals", "bodyclose", "funlen"]
+    "disable": ["lll", "gochecknoglobals", "bodyclose", "funlen", "unused", "deadcode"]
   }
 }

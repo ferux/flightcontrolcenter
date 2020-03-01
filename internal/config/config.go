@@ -9,20 +9,33 @@ import (
 
 // Application settings
 type Application struct {
-	Debug          bool                 `json:"debug,omitempty"`
-	HTTP           configHTTP           `json:"http,omitempty"`
-	SentryDSN      string               `json:"sentry_dsn,omitempty"`
-	NotifyTelegram configNotifyTelegram `json:"notify_telegram"`
+	Debug          bool           `json:"debug"`
+	HTTP           *HTTP          `json:"http"`
+	GOBAPI         *GOB           `json:"gob_api"`
+	SentryDSN      string         `json:"sentry_dsn"`
+	NotifyTelegram NotifyTelegram `json:"notify_telegram"`
+	ServerName     string         `json:"server_name"`
 }
 
-type configHTTP struct {
-	Listen  string        `json:"listen,omitempty"`
-	Timeout time.Duration `json:"timeout,omitempty"`
+type GOB struct {
+	Listen string `json:"listen"`
 }
 
-type configNotifyTelegram struct {
+type HTTP struct {
+	Listen  string        `json:"listen"`
+	Timeout time.Duration `json:"timeout"`
+}
+
+type NotifyTelegram struct {
 	API    string `json:"api"`
 	ChatID string `json:"chat_id"`
+}
+
+type Keeper struct {
+	Listen   string `json:"listen"`
+	CertFile string `json:"cert_file"`
+	KeyFile  string `json:"key_file"`
+	Name     string `json:"name"`
 }
 
 // Parse parses config from file

@@ -1,3 +1,4 @@
 vendor/** binary
 internal/static/** binary
 internal/templates/** binary
+go.sum binary
