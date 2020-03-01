@@ -10,10 +10,15 @@ import (
 // Application settings
 type Application struct {
 	Debug          bool           `json:"debug"`
-	HTTP           HTTP           `json:"http"`
+	HTTP           *HTTP          `json:"http"`
+	GOBAPI         *GOB           `json:"gob_api"`
 	SentryDSN      string         `json:"sentry_dsn"`
 	NotifyTelegram NotifyTelegram `json:"notify_telegram"`
 	ServerName     string         `json:"server_name"`
+}
+
+type GOB struct {
+	Listen string `json:"listen"`
 }
 
 type HTTP struct {

@@ -1,4 +1,4 @@
-package api
+package fcchttp
 
 type StopInfo struct {
 	Name      string `json:"name,omitempty"`
