@@ -18,6 +18,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const forwardedForHeader = "X-Forwarded-For"
+
 func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := fcontext.RequestID(ctx)
@@ -32,6 +34,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 
 		api.serveError(ctx, w, r, response)
+
 		return
 	}
 
@@ -51,26 +54,32 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 
 		api.serveError(ctx, w, r, response)
+
 		return
 	}
 
 	var filterRoute = r.URL.Query().Get("route")
+
 	var transports = make([]yandex.TransportInfo, 0, len(transportAll.IncomingTransport))
+
 	for _, tr := range transportAll.IncomingTransport {
 		if !strings.Contains(tr.Name, filterRoute) {
 			continue
 		}
+
 		transports = append(transports, tr)
 	}
 
 	logger.Debug().Interface("transport", transports).Msg("done")
 
 	var first = yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24)}
+
 	var found bool
 
 	switch len(transports) {
 	case 0:
 		logger.Debug().Msg("no incoming transport")
+
 		var response = model.ServiceError{
 			Message:   "not found",
 			RequestID: rid,
@@ -78,13 +87,16 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 
 		api.serveError(ctx, w, r, response)
+
 		return
 	case 1:
 		first = transports[0]
 		found = true
 	default:
 		logger.Debug().Int("amount", len(transports)).Msg("found buses")
+
 		first = transports[0]
+
 		for _, tr := range transports {
 			if !strings.Contains(tr.Name, filterRoute) {
 				continue
@@ -111,6 +123,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		}
 
 		api.serveError(ctx, w, r, response)
+
 		return
 	}
 
@@ -179,7 +192,7 @@ func (api *HTTP) handlePingMessage() http.HandlerFunc {
 			return
 		}
 
-		addr := r.Header.Get("X-Forwarded-For")
+		addr := r.Header.Get(forwardedForHeader)
 		if len(addr) == 0 {
 			addr, _, _ = net.SplitHostPort(r.RemoteAddr)
 		}
@@ -200,10 +213,14 @@ func (api *HTTP) handleGetDevices() http.HandlerFunc {
 }
 
 func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
-	var logger = zerolog.Ctx(ctx)
-	var rid = fcontext.RequestID(ctx)
+	var (
+		logger     = zerolog.Ctx(ctx)
+		rid        = fcontext.RequestID(ctx)
+		eventLevel = sentry.LevelFatal
 
-	var responseError model.ServiceError
+		responseError model.ServiceError
+	)
+
 	switch terr := err.(type) {
 	case model.ServiceError:
 		responseError = terr
@@ -216,15 +233,24 @@ func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.
 		responseError.RequestID = rid
 	}
 
+	if responseError.Code != http.StatusInternalServerError {
+		eventLevel = sentry.LevelError
+	}
+
 	logger.Error().Err(responseError).Msg("captured error")
 
-	api.notifier.CaptureException(err, &sentry.EventHint{
-		Context:           ctx,
-		EventID:           rid,
-		Request:           r,
-		OriginalException: err,
-		Data:              responseError,
-	}, sentry.NewScope())
+	st := sentry.NewStacktrace()
+
+	event := sentry.NewEvent()
+
+	event.Exception = []sentry.Exception{{Stacktrace: st}}
+	event.Message = responseError.Message
+	event.Environment = "production"
+	event.Level = eventLevel
+	event.Contexts["request_id"] = rid
+	event.Request = event.Request.FromHTTPRequest(r)
+
+	api.notifier.CaptureEvent(event, nil, sentry.NewScope())
 
 	asJSON(ctx, w, responseError, responseError.Code)
 }

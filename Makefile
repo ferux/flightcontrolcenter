@@ -1,6 +1,6 @@
 export GO111MODULE=on
 export GOFLAGS=-mod=vendor
-export GOBIN=$(PWD)/bin
+export GOBIN=$(PWD)/bin/$(shell go env GOHOSTOS)-$(shell go env GOHOSTARCH)
 
 PKG=$(shell go list | head -1 | sed -e 's/.*///')
 PKG_PATH=$(shell go list | head -1)
@@ -13,6 +13,7 @@ OUT?=bin/fcc
 
 GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
+
 
 default: build
 
