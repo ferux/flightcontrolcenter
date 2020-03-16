@@ -250,7 +250,9 @@ func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.
 	event.Contexts["request_id"] = rid
 	event.Request = event.Request.FromHTTPRequest(r)
 
-	api.notifier.CaptureEvent(event, nil, sentry.NewScope())
+	api.notifier.CaptureEvent(event, &sentry.EventHint{
+		OriginalException: err,
+	}, sentry.NewScope())
 
 	asJSON(ctx, w, responseError, responseError.Code)
 }
