@@ -1,4 +1,7 @@
-# flightcontrolcenter [![Build Status](https://travis-ci.com/ferux/flightcontrolcenter.svg?branch=master)](https://travis-ci.com/ferux/flightcontrolcenter)
+# flightcontrolcenter
+
+![Flight-Control-Center](https://github.com/ferux/flightcontrolcenter/workflows/Flight-Control-Center/badge.svg)
+![Check-Yandex](https://github.com/ferux/flightcontrolcenter/workflows/Check-Yandex/badge.svg)
 
 Serves personal needs.
 
