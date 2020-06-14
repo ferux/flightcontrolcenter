@@ -1,8 +1,12 @@
 ---
 name: Check-Yandex
 on:
-  schedule:
-    - cron: '0 0 * * *'
+# Turn off schedule since yandex api doesn't work now.
+#  schedule:
+#  - cron: "0 0 * * *"
+  push:
+    branches:
+    - "master"
 
 jobs:
   check-service-alive:
