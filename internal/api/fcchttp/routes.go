@@ -12,6 +12,8 @@ import (
 func (api *HTTP) setupRoutes(info model.ApplicationInfo) {
 	router := mux.NewRouter()
 
+	router.Use(middlewareCORS())
+
 	// swagger files
 	router.Handle("/swagger", http.RedirectHandler("/swagger/", http.StatusMovedPermanently))
 	router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", http.FileServer(static.AssetFile())))
