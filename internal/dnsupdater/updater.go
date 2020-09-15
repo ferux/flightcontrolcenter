@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
@@ -66,11 +67,10 @@ func (c client) Update(ctx context.Context, namespace, ip string) (err error) {
 		return model.ErrNotFound
 	}
 
-	for _, name := range names {
-		err = updateRecord(ctx, requrl, c.secret, name, ip)
-		if err != nil {
-			return fmt.Errorf("updating %s: %w", name, err)
-		}
+	joinedNames := strings.Join(names, ",")
+	err = updateRecord(ctx, requrl, c.secret, joinedNames, ip)
+	if err != nil {
+		return fmt.Errorf("updating %s: %w", joinedNames, err)
 	}
 
 	return nil
