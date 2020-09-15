@@ -46,6 +46,7 @@ type DNSUpdater struct {
 	// namespace. It needed to batch update dns records for multiple names
 	// that belongs to single IP.
 	Namespaces map[string][]string `json:"namespaces"`
+	Secret     string
 }
 
 // Parse parses config from file.

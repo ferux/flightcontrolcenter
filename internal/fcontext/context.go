@@ -35,8 +35,11 @@ func WithLogger(ctx context.Context, logger logger.Logger) context.Context {
 
 // Logger from context. It may be null so use carefully.
 func Logger(ctx context.Context) logger.Logger {
-	logger, _ := ctx.Value(loggerKey{}).(logger.Logger)
-	return logger
+	log, ok := ctx.Value(loggerKey{}).(logger.Logger)
+	if !ok {
+		return logger.New()
+	}
+	return log
 }
 
 // WithZap adds zap logger to context.

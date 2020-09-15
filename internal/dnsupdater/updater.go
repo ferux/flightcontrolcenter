@@ -39,6 +39,7 @@ func New(_ context.Context, cfg config.DNSUpdater) Client {
 	return client{
 		addr:       cfg.Address,
 		namespaces: cfg.Namespaces,
+		secret:     cfg.Secret,
 	}
 }
 

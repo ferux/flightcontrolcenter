@@ -76,7 +76,6 @@ func main() {
 		Release:     revision,
 		SampleRate:  1,
 	})
-	// notifierClient, err := raven.New(cfg.SentryDSN)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("can't create sentry client")
 	}
