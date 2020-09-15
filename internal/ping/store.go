@@ -1,13 +1,14 @@
 package ping
 
 import (
-	"errors"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
+
+	"github.com/ferux/flightcontrolcenter/internal/model"
 )
 
 type Store interface {
@@ -65,7 +66,7 @@ func (c *store) start() {
 	}
 }
 
-// TODO: possibly might be very laggy if there will be a lot of devices. Copy map and procced it, maybe?
+// TODO: possibly might be very laggy if there will be a lot of devices. Copy map and procced it, maybe?.
 func (c *store) updateDevicesState() {
 	now := time.Now()
 
@@ -74,7 +75,7 @@ func (c *store) updateDevicesState() {
 	if lockTime := time.Since(now); lockTime > time.Second*3 {
 		c.logger.Error().Dur("lock_time", lockTime).Msg("took too much time")
 		c.sentry.CaptureException(
-			errors.New("lock_time took too long"),
+			model.ErrLockTooLong,
 			&sentry.EventHint{
 				Data: map[string]interface{}{
 					"lock_time": lockTime,
@@ -96,7 +97,7 @@ func (c *store) updateDevicesState() {
 	}
 }
 
-// Ping proceeds ping message from device and updates its state
+// Ping proceeds ping message from device and updates its state.
 func (c *store) Ping(m Message) {
 	device, ok := c.getDevice(m.ID)
 
@@ -178,7 +179,7 @@ func (c *store) MarkOffline(id string) {
 	c.setDevice(device)
 }
 
-// GetDevices gets all stored devices
+// GetDevices gets all stored devices.
 func (c *store) GetDevices() []Device {
 	if len(c.devices) == 0 {
 		return []Device{}
@@ -195,11 +196,12 @@ func (c *store) GetDevices() []Device {
 	return devices
 }
 
-// Get a specific device
+// Get a specific device.
 func (c *store) GetDevice(id string) (Device, bool) {
 	return c.getDevice(id)
 }
 
+// UpsertDevice upserts device.
 func (c *store) UpsertDevice(d Device) {
 	c.setDevice(d)
 }

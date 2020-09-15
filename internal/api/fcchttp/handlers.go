@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog"
+
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/templates"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
-
-	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
 const forwardedForHeader = "X-Forwarded-For"
@@ -27,7 +27,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 
 	stopID := r.URL.Query().Get("stop_id")
 	if len(stopID) == 0 {
-		var response = model.ServiceError{
+		response := model.ServiceError{
 			Message:   "stop_id is empty",
 			RequestID: rid,
 			Code:      http.StatusUnprocessableEntity,
@@ -47,7 +47,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 
 	transportAll, err := api.yaclient.Fetch(ctx, stopID, prognosis)
 	if err != nil {
-		var response = model.ServiceError{
+		response := model.ServiceError{
 			Message:   "something went wrong",
 			RequestID: fcontext.RequestID(ctx),
 			Code:      http.StatusInternalServerError,
@@ -58,9 +58,9 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var filterRoute = r.URL.Query().Get("route")
+	filterRoute := r.URL.Query().Get("route")
 
-	var transports = make([]yandex.TransportInfo, 0, len(transportAll.IncomingTransport))
+	transports := make([]yandex.TransportInfo, 0, len(transportAll.IncomingTransport))
 
 	for _, tr := range transportAll.IncomingTransport {
 		if !strings.Contains(tr.Name, filterRoute) {
@@ -72,7 +72,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debug().Interface("transport", transports).Msg("done")
 
-	var first = yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24)}
+	first := yandex.TransportInfo{Arrive: time.Now().Add(time.Hour * 24)}
 
 	var found bool
 
@@ -80,7 +80,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	case 0:
 		logger.Debug().Msg("no incoming transport")
 
-		var response = model.ServiceError{
+		response := model.ServiceError{
 			Message:   "not found",
 			RequestID: rid,
 			Code:      http.StatusNotFound,
@@ -116,7 +116,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 	logger.Debug().Interface("result", first).Msg("done")
 
 	if !strings.Contains(first.Name, filterRoute) && !found {
-		var response = model.ServiceError{
+		response := model.ServiceError{
 			Message:   "not found",
 			RequestID: rid,
 			Code:      http.StatusNotFound,
@@ -156,10 +156,12 @@ func (api *HTTP) handleInfo(info model.ApplicationInfo) http.HandlerFunc {
 
 func (api *HTTP) handleSendMessage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var ctx = r.Context()
-		var apiKey = r.URL.Query().Get("api")
-		var chatID = r.URL.Query().Get("chat_id")
-		var text = r.URL.Query().Get("text")
+		var (
+			ctx    = r.Context()
+			apiKey = r.URL.Query().Get("api")
+			chatID = r.URL.Query().Get("chat_id")
+			text   = r.URL.Query().Get("text")
+		)
 
 		err := api.tgclient.SendMessageViaHTTP(ctx, apiKey, chatID, text)
 		if err != nil {
@@ -173,8 +175,11 @@ func (api *HTTP) handleSendMessage() http.HandlerFunc {
 
 func (api *HTTP) handlePingMessage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var ctx = r.Context()
-		var msg ping.Message
+		var (
+			ctx = r.Context()
+			msg ping.Message
+		)
+
 		err := json.NewDecoder(r.Body).Decode(&msg)
 		if err != nil {
 			api.serveError(ctx, w, r, err)
@@ -183,12 +188,14 @@ func (api *HTTP) handlePingMessage() http.HandlerFunc {
 
 		if len(msg.ID) != 64 {
 			api.logger.Warn().Msg("device without id")
+
 			err = model.ServiceError{
 				Code:      http.StatusBadRequest,
 				RequestID: fcontext.RequestID(ctx),
 				Message:   "empty id",
 			}
 			api.serveError(ctx, w, r, err)
+
 			return
 		}
 
@@ -205,10 +212,30 @@ func (api *HTTP) handlePingMessage() http.HandlerFunc {
 
 func (api *HTTP) handleGetDevices() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var ctx = r.Context()
+		ctx := r.Context()
+
 		devices := api.dstore.GetDevices()
 
 		asJSON(ctx, w, devices, http.StatusOK)
+	}
+}
+
+func (api *HTTP) handleDNSUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		q := r.URL.Query()
+		namespace := q.Get("namespace")
+		ip := q.Get("ip")
+
+		err := api.dnsUpdater.Update(ctx, namespace, ip)
+		if err != nil {
+			api.serveError(ctx, w, r, err)
+
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -226,6 +253,14 @@ func (api *HTTP) serveError(ctx context.Context, w http.ResponseWriter, r *http.
 		responseError = terr
 		if terr.Code == 0 {
 			responseError.Code = http.StatusInternalServerError
+		}
+	case model.Error:
+		if terr == model.ErrNotFound {
+			responseError = model.ServiceError{
+				Message:   "not found",
+				Code:      http.StatusNotFound,
+				RequestID: rid,
+			}
 		}
 	default:
 		responseError.Code = http.StatusInternalServerError

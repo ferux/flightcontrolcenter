@@ -2,7 +2,7 @@ package ping
 
 import "time"
 
-// Message stores information about device
+// Message stores information about device.
 type Message struct {
 	ID        string    `json:"id,omitempty"`
 	Name      string    `json:"name,omitempty"`
@@ -14,6 +14,7 @@ type Message struct {
 	IP string `json:"ip,omitempty"`
 }
 
+// Device is a device.
 type Device struct {
 	Message
 

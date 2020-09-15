@@ -5,10 +5,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter/internal/fcontext"
-
 	"github.com/pborman/uuid"
 	"github.com/rs/zerolog"
+
+	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 )
 
 func middlewareCORS() func(http.Handler) http.Handler {

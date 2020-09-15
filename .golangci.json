@@ -5,6 +5,11 @@
   },
   "linters": {
     "enable-all": true,
-    "disable": ["lll", "gochecknoglobals", "bodyclose", "funlen", "unused", "deadcode"]
+    "disable": ["testpackage", "nlreturn", "gomnd", "funlen", "godox", "gci", "wsl", "lll"]
+  },
+  "issues": {
+    "exclude": [
+      "internal/templates"
+    ]
   }
 }

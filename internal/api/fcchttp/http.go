@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog"
+
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/dnsupdater"
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
-
-	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -25,21 +26,23 @@ const (
 type HTTP struct {
 	srv *http.Server
 
-	dstore   ping.Store
-	yaclient yandex.Client
-	tgclient telegram.Client
-	logger   zerolog.Logger
-	notifier *sentry.Client
+	dstore     ping.Store
+	yaclient   yandex.Client
+	tgclient   telegram.Client
+	logger     zerolog.Logger
+	dnsUpdater dnsupdater.Client
+	notifier   *sentry.Client
 
 	requestCount int64
 	bootTime     time.Time
 }
 
-// NewHTTP prepares new http service
+// NewHTTP prepares new http service.
 func NewHTTP(
 	cfg config.HTTP,
 	yaclient yandex.Client,
 	tgclient telegram.Client,
+	dnsUpdater dnsupdater.Client,
 	dstore ping.Store,
 	logger zerolog.Logger,
 	nClient *sentry.Client,
@@ -56,20 +59,21 @@ func NewHTTP(
 	}
 
 	api := &HTTP{
-		srv:      srv,
-		yaclient: yaclient,
-		tgclient: tgclient,
-		dstore:   dstore,
-		logger:   logger,
-		bootTime: time.Now(),
-		notifier: nClient,
+		srv:        srv,
+		yaclient:   yaclient,
+		tgclient:   tgclient,
+		dnsUpdater: dnsUpdater,
+		dstore:     dstore,
+		logger:     logger,
+		bootTime:   time.Now(),
+		notifier:   nClient,
 	}
 	api.setupRoutes(appInfo)
 
 	return api, nil
 }
 
-// Serve connections
+// Serve connections.
 func (api *HTTP) Serve() {
 	go func() {
 		api.logger.Info().Str("listen", api.srv.Addr).Msg("serving http")
@@ -81,7 +85,7 @@ func (api *HTTP) Serve() {
 	}()
 }
 
-// Shutdown the server
+// Shutdown the server.
 func (api *HTTP) Shutdown(ctx context.Context) error {
 	return api.srv.Shutdown(ctx)
 }

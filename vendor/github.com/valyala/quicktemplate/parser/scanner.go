@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 )
 
@@ -67,8 +68,12 @@ type scanner struct {
 
 	collapseSpaceDepth int
 	stripSpaceDepth    int
+	stripToNewLine     bool
 	rewind             bool
 }
+
+var tailOfLine = regexp.MustCompile(`^[[:blank:]]*(?:\r*\n)?`)
+var prevBlank = regexp.MustCompile(`[[:blank:]]+$`)
 
 func newScanner(r io.Reader, filePath string) *scanner {
 	// Substitute backslashes with forward slashes in filePath
@@ -101,6 +106,10 @@ func (s *scanner) Next() bool {
 		}
 		switch s.t.ID {
 		case text:
+			if s.stripToNewLine {
+				s.t.Value = tailOfLine.ReplaceAll(s.t.Value, nil)
+				s.stripToNewLine = false
+			}
 			if len(s.t.Value) == 0 {
 				// skip empty text
 				continue
@@ -265,6 +274,15 @@ func (s *scanner) readText() bool {
 		if s.c == '%' {
 			s.nextTokenID = tagName
 			ok = true
+			if !s.nextByte() {
+				s.appendByte()
+				break
+			}
+			if s.c != '-' {
+				s.unreadByte(s.c)
+				break
+			}
+			s.t.Value = prevBlank.ReplaceAll(s.t.Value, nil)
 			break
 		}
 		s.unreadByte('{')
@@ -296,6 +314,11 @@ func (s *scanner) readTagName() bool {
 			}
 			continue
 		}
+		if s.c == '-' {
+			s.unreadByte(s.c)
+			s.nextTokenID = tagContents
+			return true
+		}
 		s.err = fmt.Errorf("unexpected character: '%c'", s.c)
 		s.unreadByte('~')
 		return false
@@ -318,6 +341,10 @@ func (s *scanner) readTagContents() bool {
 			return false
 		}
 		if s.c == '}' {
+			if bytes.HasSuffix(s.t.Value, []byte("-")) {
+				s.t.Value = s.t.Value[:len(s.t.Value)-1]
+				s.stripToNewLine = true
+			}
 			s.nextTokenID = text
 			s.t.Value = stripTrailingSpace(s.t.Value)
 			return true

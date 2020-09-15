@@ -42,8 +42,11 @@ build_linux: build
 
 .PHONY: check
 check:
+	$(info >Organizing imports)
+	@$(GOBIN)/gci -local $(cat go.mod | grep module | sed 's/module //g') ./internal/
+
 	$(info >Inspecting code)
-	@$(GOBIN)/golangci-lint run && echo ">>"Everything is okay! || echo !!Oopsie
+	@$(GOBIN)/golangci-lint run
 
 .PHONY: test
 test:

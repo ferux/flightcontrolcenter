@@ -7,7 +7,7 @@ import (
 )
 
 func TestMarshalJSON(t *testing.T) {
-	var testStruct = struct {
+	testStruct := struct {
 		D Duration `json:"d"`
 	}{D: Duration(time.Second)}
 
@@ -24,7 +24,7 @@ func TestMarshalJSON(t *testing.T) {
 func TestUnmarshalJSON(t *testing.T) {
 	data := []byte(`{"d":"1s"}`)
 
-	var testStruct = struct {
+	testStruct := struct {
 		D Duration `json:"d"`
 	}{}
 

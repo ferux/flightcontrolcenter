@@ -3,23 +3,26 @@ package fcontext
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"github.com/ferux/flightcontrolcenter/internal/logger"
 	"github.com/ferux/flightcontrolcenter/internal/model"
-	"go.uber.org/zap"
 )
 
-type requestID struct{}
-type loggerKey struct{}
-type DeviceIDKey struct{}
-type zapKey struct{}
-type DeviceRequestIDKey struct{}
+type (
+	requestID          struct{}
+	loggerKey          struct{}
+	DeviceIDKey        struct{}
+	zapKey             struct{}
+	DeviceRequestIDKey struct{}
+)
 
-// WithRequestID adds request id to ctx
+// WithRequestID adds request id to ctx.
 func WithRequestID(ctx context.Context, rid string) context.Context {
 	return context.WithValue(ctx, requestID{}, rid)
 }
 
-// RequestID gets request id from context or generates a new one
+// RequestID gets request id from context or generates a new one.
 func RequestID(ctx context.Context) string {
 	rid, _ := ctx.Value(requestID{}).(string)
 	return rid

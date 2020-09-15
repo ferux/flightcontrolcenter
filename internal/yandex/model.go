@@ -6,12 +6,12 @@ import (
 	"github.com/ferux/yandexmapclient"
 )
 
-// StopInfo model
+// StopInfo model.
 type StopInfo struct {
 	IncomingTransport []TransportInfo
 }
 
-// TransportInfo model
+// TransportInfo model.
 type TransportInfo struct {
 	Name   string
 	Arrive time.Time

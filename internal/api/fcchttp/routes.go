@@ -3,10 +3,10 @@ package fcchttp
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/static"
-
-	"github.com/gorilla/mux"
 )
 
 func (api *HTTP) setupRoutes(info model.ApplicationInfo) {
@@ -26,5 +26,7 @@ func (api *HTTP) setupRoutes(info model.ApplicationInfo) {
 	v1.HandleFunc("/send_message", api.handleSendMessage()).Methods(http.MethodGet)
 	v1.HandleFunc("/ping", api.handlePingMessage()).Methods(http.MethodPost)
 	v1.HandleFunc("/devices", api.handleGetDevices()).Methods(http.MethodGet)
+	// Use GET here because my router does not support POST methods in easy way.
+	v1.HandleFunc("/update_dns", api.handleDNSUpdate()).Methods(http.MethodGet)
 	api.srv.Handler = router
 }

@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter/internal/fcontext"
-	"github.com/ferux/flightcontrolcenter/internal/model"
+	"github.com/rs/zerolog"
 	"github.com/valyala/fastjson"
 
-	"github.com/rs/zerolog"
+	"github.com/ferux/flightcontrolcenter/internal/fcontext"
+	"github.com/ferux/flightcontrolcenter/internal/model"
 )
 
-// Client for interacting with telegram
+// Client for interacting with telegram.
 type Client interface {
 	SendMessageViaHTTP(ctx context.Context, apiKey, chatID, text string) error
 }
@@ -23,7 +23,7 @@ type client struct {
 	c *http.Client
 }
 
-// New creates new telegram client
+// New creates new telegram client.
 func New() Client {
 	c := http.DefaultClient
 	c.Timeout = time.Second * 10
@@ -49,8 +49,8 @@ func (client *client) SendMessageViaHTTP(ctx context.Context, apiKey, chatID, te
 
 	logger.Debug().Str("api_key", apiKey).Str("chat_id", chatID).Str("text", text).Msg("resending to telegram")
 
-	var requestURL = fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", apiKey)
-	request, _ := http.NewRequest(http.MethodGet, requestURL, nil)
+	requestURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", apiKey)
+	request, _ := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 
 	values := request.URL.Query()
 	values.Set("chat_id", chatID)

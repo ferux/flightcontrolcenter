@@ -6,7 +6,7 @@ type Topic string
 
 type Handler func(args ...interface{})
 
-// Core stores subscribers for each event
+// Core stores subscribers for each event.
 type Core struct {
 	subs map[Topic][]Handler
 

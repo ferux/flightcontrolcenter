@@ -6,9 +6,9 @@ import (
 	"encoding/gob"
 	"fmt"
 
-	"github.com/ferux/flightcontrolcenter/internal/telegram"
-
 	"github.com/rs/zerolog"
+
+	"github.com/ferux/flightcontrolcenter/internal/telegram"
 )
 
 type notifyTelegramHandler struct {

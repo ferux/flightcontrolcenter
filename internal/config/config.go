@@ -7,7 +7,7 @@ import (
 	"github.com/ferux/flightcontrolcenter/internal/time"
 )
 
-// Application settings
+// Application settings.
 type Application struct {
 	Debug          bool           `json:"debug"`
 	HTTP           *HTTP          `json:"http"`
@@ -15,6 +15,7 @@ type Application struct {
 	SentryDSN      string         `json:"sentry_dsn"`
 	NotifyTelegram NotifyTelegram `json:"notify_telegram"`
 	ServerName     string         `json:"server_name"`
+	DNSUpdater     DNSUpdater     `json:"dns_updater"`
 }
 
 type GOB struct {
@@ -38,14 +39,23 @@ type Keeper struct {
 	Name     string `json:"name"`
 }
 
-// Parse parses config from file
+// DNSUpdater is a service for updating dns records dynamically.
+type DNSUpdater struct {
+	Address string `json:"address"`
+	// Namespaces is a collection of domain names that relates to specific
+	// namespace. It needed to batch update dns records for multiple names
+	// that belongs to single IP.
+	Namespaces map[string][]string `json:"namespaces"`
+}
+
+// Parse parses config from file.
 func Parse(path string) (Application, error) {
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return Application{}, err
 	}
 
-	var app = Application{}
+	app := Application{}
 	err = json.Unmarshal(fileBytes, &app)
 
 	return app, err

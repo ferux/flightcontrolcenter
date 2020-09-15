@@ -9,17 +9,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog"
+
 	"github.com/ferux/flightcontrolcenter/internal/api/fccgob"
 	"github.com/ferux/flightcontrolcenter/internal/api/fcchttp"
 	"github.com/ferux/flightcontrolcenter/internal/config"
+	"github.com/ferux/flightcontrolcenter/internal/dnsupdater"
+	pkglogger "github.com/ferux/flightcontrolcenter/internal/logger"
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
-
-	pkglogger "github.com/ferux/flightcontrolcenter/internal/logger"
-	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -75,7 +76,6 @@ func main() {
 		Release:     revision,
 		SampleRate:  1,
 	})
-
 	// notifierClient, err := raven.New(cfg.SentryDSN)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("can't create sentry client")
@@ -87,7 +87,7 @@ func main() {
 		tgclient = telegram.New()
 	}
 
-	var appInfo = model.ApplicationInfo{
+	appInfo := model.ApplicationInfo{
 		Branch:      branch,
 		Revision:    revision,
 		Environment: env,
@@ -113,8 +113,10 @@ func main() {
 		}
 	}()
 
+	dns := dnsupdater.New(context.Background(), cfg.DNSUpdater)
+
 	if cfg.HTTP != nil {
-		httpapi, err := fcchttp.NewHTTP(*cfg.HTTP, yaclient, tgclient, dstore, logger, notifierClient, appInfo)
+		httpapi, err := fcchttp.NewHTTP(*cfg.HTTP, yaclient, tgclient, dns, dstore, logger, notifierClient, appInfo)
 		if err != nil {
 			logger.Error().Err(err).Msg("running http client")
 		}
@@ -142,7 +144,7 @@ func main() {
 }
 
 func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api, chatID string) error {
-	var message = strings.Builder{}
+	message := strings.Builder{}
 
 	message.Grow(64)
 	message.WriteString("fcc branch=")
@@ -157,7 +159,7 @@ func sendNotificationMessage(ctx context.Context, tgclient telegram.Client, api,
 
 func deviceStateNotify(tgclient telegram.Client, api, chatID string) ping.NotifyDeviceStateChanged {
 	return func(d ping.Device) {
-		var message = strings.Builder{}
+		message := strings.Builder{}
 
 		message.Grow(128)
 		message.WriteString(d.Name)

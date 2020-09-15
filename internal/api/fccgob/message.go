@@ -46,8 +46,6 @@ type logMessage struct {
 	Severity logSeverity
 }
 
-type ok struct{}
-
 type failure struct {
 	Reason string
 }

@@ -11,5 +11,17 @@ type ServiceError struct {
 
 func (err ServiceError) Error() string {
 	data, _ := json.Marshal(&err)
+
 	return string(data)
 }
+
+type Error string
+
+func (err Error) Error() string {
+	return string(err)
+}
+
+const (
+	ErrNotFound    Error = "not found"
+	ErrLockTooLong Error = "lock acquire too long"
+)

@@ -114,6 +114,28 @@ func (w *QWriter) D(n int) {
 	}
 }
 
+// DL writes n to w
+func (w *QWriter) DL(n int64) {
+	bb, ok := w.w.(*ByteBuffer)
+	if ok {
+		bb.B = strconv.AppendInt(bb.B, n, 10)
+	} else {
+		w.b = strconv.AppendInt(w.b[:0], n, 10)
+		w.Write(w.b)
+	}
+}
+
+// DUL writes n to w
+func (w *QWriter) DUL(n uint64) {
+	bb, ok := w.w.(*ByteBuffer)
+	if ok {
+		bb.B = strconv.AppendUint(bb.B, n, 10)
+	} else {
+		w.b = strconv.AppendUint(w.b[:0], n, 10)
+		w.Write(w.b)
+	}
+}
+
 // F writes f to w.
 func (w *QWriter) F(f float64) {
 	n := int(f)
@@ -140,9 +162,13 @@ func (w *QWriter) FPrec(f float64, prec int) {
 
 // Q writes quoted json-safe s to w.
 func (w *QWriter) Q(s string) {
-	w.Write(strQuote)
-	writeJSONString(w, s)
-	w.Write(strQuote)
+	bb, ok := w.w.(*ByteBuffer)
+	if ok {
+		bb.B = appendJSONString(bb.B, s, true)
+	} else {
+		w.b = appendJSONString(w.b[:0], s, true)
+		w.Write(w.b)
+	}
 }
 
 var strQuote = []byte(`"`)
@@ -156,7 +182,13 @@ func (w *QWriter) QZ(z []byte) {
 //
 // Unlike Q it doesn't qoute resulting s.
 func (w *QWriter) J(s string) {
-	writeJSONString(w, s)
+	bb, ok := w.w.(*ByteBuffer)
+	if ok {
+		bb.B = appendJSONString(bb.B, s, false)
+	} else {
+		w.b = appendJSONString(w.b[:0], s, false)
+		w.Write(w.b)
+	}
 }
 
 // JZ writes json-safe z to w.

@@ -4,18 +4,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/ferux/flightcontrolcenter/internal/logger"
-
 	"github.com/ferux/yandexmapclient"
+
+	"github.com/ferux/flightcontrolcenter/internal/logger"
 )
 
-// Client for interacting with yandex client
+// Client for interacting with yandex client.
 type Client interface {
 	Fetch(ctx context.Context, stopID string, prognosis bool) (StopInfo, error)
 	UpdateToken() error
 }
 
-// New initialisates new client. It's acceptable to pass nil for logger
+// New initialisates new client. It's acceptable to pass nil for logger.
 // nolint:interfacer
 func New(l logger.Logger) (Client, error) {
 	c, err := yandexmapclient.New(yandexmapclient.WithLogger(l))
@@ -36,7 +36,7 @@ func (c *client) Fetch(ctx context.Context, stopID string, prognosis bool) (Stop
 		return StopInfo{}, nil
 	}
 
-	var s = StopInfo{IncomingTransport: make([]TransportInfo, 0, len(si.Data.Properties.StopMetaData.Transport))}
+	s := StopInfo{IncomingTransport: make([]TransportInfo, 0, len(si.Data.Properties.StopMetaData.Transport))}
 
 	if len(si.Data.Properties.StopMetaData.Transport) == 0 {
 		return StopInfo{}, nil
@@ -55,7 +55,7 @@ func (c *client) Fetch(ctx context.Context, stopID string, prognosis bool) (Stop
 }
 
 func extractTransportInfo(tr yandexmapclient.TransportInfo) TransportInfo {
-	var ti = TransportInfo{Name: tr.Name}
+	ti := TransportInfo{Name: tr.Name}
 
 	if len(tr.Threads) == 0 {
 		return TransportInfo{}

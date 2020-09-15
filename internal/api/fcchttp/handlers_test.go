@@ -7,17 +7,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/matryer/is"
+
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/templates"
-
-	"github.com/matryer/is"
 )
 
 func TestGetInfo(t *testing.T) {
-	var is = is.New(t)
-	var now = time.Now()
+	is := is.New(t)
+	now := time.Now()
 
-	var appInfo = model.ApplicationInfo{
+	appInfo := model.ApplicationInfo{
 		Branch:   "master",
 		Revision: "revision",
 	}

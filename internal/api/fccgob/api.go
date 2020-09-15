@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
 
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+
 	"github.com/ferux/flightcontrolcenter/internal/config"
 	"github.com/ferux/flightcontrolcenter/internal/fcontext"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
-
-	"github.com/google/uuid"
-	"github.com/rs/zerolog"
 )
 
 // Serve starts to listen incoming connections.
@@ -39,7 +40,7 @@ func Serve(ctx context.Context, cfg config.GOB, logger zerolog.Logger, h map[Mes
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			if err == os.ErrClosed {
+			if errors.Is(err, os.ErrClosed) {
 				return nil
 			}
 
@@ -73,6 +74,7 @@ type Handler interface {
 func handleConnection(ctx context.Context, conn net.Conn, logger zerolog.Logger, handlers map[MessageKind]Handler) {
 	go func() {
 		<-ctx.Done()
+
 		errClose := conn.Close()
 		if errClose != nil {
 			logger.Warn().Err(errClose).Msg("unagle to close connection properly")
@@ -109,11 +111,7 @@ func handleConnection(ctx context.Context, conn net.Conn, logger zerolog.Logger,
 		msgCtx := fcontext.WithRequestID(ctx, msg.RequestID)
 		msgCtx = msgLogger.WithContext(msgCtx)
 
-		msgLogger.Debug().
-			Str("remote_addr", conn.RemoteAddr().String()).
-			Str("kind", msg.Kind.String()).
-			Int("len", len(msg.Data)).
-			Msg("received message")
+		msgLogger.Debug().Str("remote_addr", conn.RemoteAddr().String()).Str("kind", msg.Kind.String()).Int("len", len(msg.Data)).Msg("received message")
 
 		h, ok := handlers[msg.Kind]
 		if !ok {
