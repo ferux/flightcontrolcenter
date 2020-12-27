@@ -136,7 +136,6 @@ func (c HTTPClient) UpdateDNS(ctx context.Context, namespace string, ip string) 
 		if err != nil {
 			return fmt.Errorf("updating dns record: %w", err)
 		}
-
 	}
 
 	return nil
