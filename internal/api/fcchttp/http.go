@@ -49,6 +49,7 @@ func NewHTTP(
 	appInfo model.ApplicationInfo,
 ) (*HTTP, error) {
 	to := cfg.Timeout.Std()
+
 	srv := &http.Server{
 		Addr:              cfg.Listen,
 		ReadTimeout:       to,

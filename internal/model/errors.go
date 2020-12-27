@@ -22,6 +22,11 @@ func (err Error) Error() string {
 }
 
 const (
-	ErrNotFound    Error = "not found"
-	ErrLockTooLong Error = "lock acquire too long"
+	ErrNotFound          Error = "not found"
+	ErrLockTooLong       Error = "lock acquire too long"
+	ErrMissingParameter  Error = "missing parameter"
+	ErrWrongStatusCode   Error = "wrong status code"
+	ErrUnauthorized      Error = "unauthorized"
+	ErrForbidden         Error = "forbidden"
+	ErrClientNotPrepared Error = "client not prepared"
 )

@@ -139,7 +139,7 @@ func (api *HTTP) handleNextBus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *HTTP) handleInfo(info model.ApplicationInfo) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
@@ -228,7 +228,7 @@ func (api *HTTP) handleDNSUpdate() http.HandlerFunc {
 		namespace := q.Get("namespace")
 		ip := q.Get("ip")
 
-		err := api.dnsUpdater.Update(ctx, namespace, ip)
+		err := api.dnsUpdater.UpdateDNS(ctx, namespace, ip)
 		if err != nil {
 			api.serveError(ctx, w, r, err)
 

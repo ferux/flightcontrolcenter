@@ -155,6 +155,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/Device'
 
+  /update_dns:
+    get:
+      tags:
+      - service
+      summary: Update records for requested namespace
+      operationId: "handleUpdateDNS"
+      parameters:
+      - name: ip
+        in: query
+        required: true
+        example: "192.168.1.1"
+        schema:
+          type: string
+      - name: namespace
+        in: query
+        required: true
+        example: "bonanza"
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+
 components:
   schemas:
 

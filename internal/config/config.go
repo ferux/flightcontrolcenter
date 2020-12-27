@@ -16,6 +16,16 @@ type Application struct {
 	NotifyTelegram NotifyTelegram `json:"notify_telegram"`
 	ServerName     string         `json:"server_name"`
 	DNSUpdater     DNSUpdater     `json:"dns_updater"`
+	VPSCP          *VPS           `json:"vps_cp"`
+}
+
+// VPS provides settings for accessing VPS API. Either Token or
+// User and Pass should be set to operate.
+type VPS struct {
+	URL   string
+	Token string
+	User  string
+	Pass  string
 }
 
 type GOB struct {

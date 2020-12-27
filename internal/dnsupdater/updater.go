@@ -16,12 +16,12 @@ import (
 )
 
 type Client interface {
-	Update(ctx context.Context, namespace, ip string) (err error)
+	UpdateDNS(ctx context.Context, namespace, ip string) (err error)
 }
 
 type clientNoop struct{}
 
-func (clientNoop) Update(_ context.Context, _, _ string) error {
+func (clientNoop) UpdateDNS(_ context.Context, _, _ string) error {
 	return nil
 }
 
@@ -54,7 +54,7 @@ type response struct {
 }
 
 // Update implements client interface.
-func (c client) Update(ctx context.Context, namespace, ip string) (err error) {
+func (c client) UpdateDNS(ctx context.Context, namespace, ip string) (err error) {
 	var requrl *url.URL
 
 	requrl, err = url.Parse(c.addr + "/update")

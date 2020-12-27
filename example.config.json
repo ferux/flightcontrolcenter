@@ -1,8 +1,18 @@
 {
-        "debug": true,
-        "http": {
-                "listen": ":8080",
-                "timeout": "5m30s"
-        },
-        "sentry_dsn": ""
+  "debug": true,
+  "http": {
+    "listen": ":8080",
+    "timeout": "5m30s"
+  },
+  "sentry_dsn": "",
+  "notify_telegram": {
+    "api": "",
+    "chat_id": ""
+  },
+  "dns_updater": {
+    "address": "",
+    "namespaces": {},
+    "secret": ""
+  },
+  "vps_cp": null
 }

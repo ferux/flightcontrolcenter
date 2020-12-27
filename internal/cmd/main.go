@@ -20,6 +20,7 @@ import (
 	"github.com/ferux/flightcontrolcenter/internal/model"
 	"github.com/ferux/flightcontrolcenter/internal/ping"
 	"github.com/ferux/flightcontrolcenter/internal/telegram"
+	"github.com/ferux/flightcontrolcenter/internal/vpsmanager"
 	"github.com/ferux/flightcontrolcenter/internal/yandex"
 )
 
@@ -112,7 +113,17 @@ func main() {
 		}
 	}()
 
-	dns := dnsupdater.New(context.Background(), cfg.DNSUpdater)
+	var dns dnsupdater.Client
+	if cfg.VPSCP != nil {
+		dns, err = vpsmanager.New(ctx, *cfg.VPSCP, cfg.DNSUpdater)
+		if err != nil {
+			logger.Error().Err(err).Msg("unable to make vps manager client")
+
+			return
+		}
+	} else {
+		dns = dnsupdater.New(ctx, cfg.DNSUpdater)
+	}
 
 	if cfg.HTTP != nil {
 		httpapi, err := fcchttp.NewHTTP(*cfg.HTTP, yaclient, tgclient, dns, dstore, logger, notifierClient, appInfo)
